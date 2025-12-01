@@ -17,10 +17,6 @@ public interface UserDao {
     @Select("SELECT COUNT(*) FROM `user` WHERE nickname = #{nickname}")
     int countByNickname(@Param("nickname") String nickname);
     
-    // 이메일 중복 체크
-    @Select("SELECT COUNT(*) FROM `user` WHERE email = #{email}")
-    int countByEmail(String email);
-
     // 회원가입 저장
     @Insert("""
         INSERT INTO `user`
