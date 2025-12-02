@@ -25,6 +25,14 @@ public interface UserDao {
         (#{loginId}, #{loginPw}, #{nickname}, #{email}, #{userName}, #{birth})
         """)
     void insertUser(User user);
+    
+    // 로그인 시도시 입력한 아이디,비밀번호 일치 여부
+    @Select("""
+    		SELECT loginPw 
+    			FROM `user` 
+    			WHERE loginId = #{loginId} 
+    		""")
+	String loginChk(User user);
 
 	
 }

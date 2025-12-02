@@ -29,7 +29,7 @@ public class UserController {
     // 아이디 중복체크
     @GetMapping("/checkId")
     public Map<String, Boolean> checkId(@RequestParam String loginId) {
-        boolean available = userService.isIdAvailable(loginId);
+        boolean available = this.userService.isIdAvailable(loginId);
         Map<String, Boolean> result = new HashMap<>();
         result.put("available", available);
         return result;
@@ -38,7 +38,7 @@ public class UserController {
     // 닉네임 중복체크
     @GetMapping("/checkNickname")
     public Map<String, Boolean> checkNickname(@RequestParam String nickname) {
-        boolean available = userService.isNicknameAvailable(nickname);
+        boolean available = this.userService.isNicknameAvailable(nickname);
         Map<String, Boolean> result = new HashMap<>();
         result.put("available", available);
         return result;
@@ -54,7 +54,7 @@ public class UserController {
     // 인증번호 확인
     @PostMapping("/emailVerify")
     public ResponseEntity<?> verifyEmail(@RequestBody EmailRequest request) {
-        boolean verified = userService.verifyCode(request.getEmail(), request.getCode());
+        boolean verified = this.userService.verifyCode(request.getEmail(), request.getCode());
         if (verified) {
             return ResponseEntity.ok("인증 성공");
         } else {
@@ -64,9 +64,17 @@ public class UserController {
     
     @PostMapping("/join")
     public Map<String, Object> join(@RequestBody User user) {
-    	userService.registerUser(user);
+    	this.userService.registerUser(user);
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         return result;
+    }
+    
+    @PostMapping("/login")
+    public Map<String, Boolean> login(@RequestBody User user) {
+    	boolean loginChk = this.userService.loginChk(user);
+    	Map<String, Boolean> result = new HashMap<>();
+    	result.put("loginChk", loginChk);
+    	return result;
     }
 }

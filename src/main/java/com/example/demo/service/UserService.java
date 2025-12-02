@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dao.UserDao;
@@ -15,15 +16,15 @@ import com.example.demo.dto.User;
 @Service
 public class UserService {
 
-    private final UserDao dao;
+    private final UserDao userDao;
     private final BCryptPasswordEncoder encoder;
     @Autowired
     private final JavaMailSender mailSender;
     
     
     // 생성자 주입
-    public UserService(UserDao dao,JavaMailSender mailSender) {
-        this.dao = dao;
+    public UserService(UserDao userDao,JavaMailSender mailSender) {
+        this.userDao = userDao;
         this.encoder = new BCryptPasswordEncoder();
         this.mailSender = mailSender;
     }
@@ -63,19 +64,26 @@ public class UserService {
     
     // 아이디 사용 가능 여부
     public boolean isIdAvailable(String loginId) {
-        return dao.countByLoginId(loginId) == 0;
+        return this.userDao.countByLoginId(loginId) == 0;
     }
 
     // 닉네임 사용 가능 여부
     public boolean isNicknameAvailable(String nickname) {
-        return dao.countByNickname(nickname) == 0;
+        return this.userDao.countByNickname(nickname) == 0;
     }
     
     
     // 회원가입 처리
     public void registerUser(User user) {
+    	// 비밀번호 암호화
         user.setLoginPw(encoder.encode(user.getLoginPw()));
-        dao.insertUser(user);
+        this.userDao.insertUser(user);
     }
+    
+    // 로그인 검증
+	public boolean loginChk(User user) {
+		// 암호화 된 비밀번호로 검증
+		return encoder.matches(user.getLoginPw(), this.userDao.loginChk(user));
+	}
 
 }
