@@ -15,6 +15,8 @@ import com.example.demo.dto.EmailRequest;
 import com.example.demo.dto.User;
 import com.example.demo.service.UserService;
 
+import jakarta.servlet.http.HttpSession;
+
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -61,7 +63,7 @@ public class UserController {
             return ResponseEntity.badRequest().body("인증 실패");
         }
     }
-    
+    // 회원가입
     @PostMapping("/join")
     public Map<String, Object> join(@RequestBody User user) {
     	this.userService.registerUser(user);
@@ -70,11 +72,45 @@ public class UserController {
         return result;
     }
     
+    // 로그인 검증
     @PostMapping("/login")
-    public Map<String, Boolean> login(@RequestBody User user) {
+    public Map<String, Boolean> login(@RequestBody User user, HttpSession session) {
     	boolean loginChk = this.userService.loginChk(user);
     	Map<String, Boolean> result = new HashMap<>();
     	result.put("loginChk", loginChk);
+    	
+    	// 세션 생성 (검증을 통해 loginChk에 true 가 남는다면 로그인 검증에 성공했다는 의미)
+    	if (loginChk) {
+    		session.setAttribute("userLoginId", user.getLoginId());
+    	}
     	return result;
     }
+    
+    // 로그인 여부 체크
+    @GetMapping
+    public Map<String, Object> loginCheck(HttpSession session) {
+        Map<String, Object> map = new HashMap<>();
+        String loginUser = (String)session.getAttribute("userLoginId");
+
+        if (loginUser != null) {
+            map.put("isLogin", true);
+            map.put("loginId", loginUser);
+        } else {
+            map.put("isLogin", false);
+        }
+
+        return map;
+    }
+    
+    // 로그아웃
+    @PostMapping("/logout")
+    public Map<String, Object> logout(HttpSession session) {
+    	// 사용자의 현재 세션을 종료 (세션 객체에 저장된 모든 정보 삭제, 해당 세션을 만료시키는 역할)
+        session.invalidate();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        return result;
+    }
+    
 }

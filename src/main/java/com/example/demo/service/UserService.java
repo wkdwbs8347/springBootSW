@@ -82,8 +82,16 @@ public class UserService {
     
     // 로그인 검증
 	public boolean loginChk(User user) {
-		// 암호화 된 비밀번호로 검증
-		return encoder.matches(user.getLoginPw(), this.userDao.loginChk(user));
+		// 암호화 된 비밀번호 가져오기
+		String encodePw = this.userDao.loginChk(user);
+		
+		// 만약 아이디가 존재하지 않을때는 쿼리 결과가 null 일것이기 때문에 그 상황에 대한 처리 
+		if (encodePw == null) {
+			return false;
+		}
+		
+		// 가져온 암호화 된 비밀번호랑 사용자가 입력한 비밀번호와 비교하는 메서드
+		return encoder.matches(user.getLoginPw(), encodePw);
 	}
 
 }

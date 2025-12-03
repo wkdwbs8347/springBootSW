@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class TestController {
 
-    @GetMapping("hello")
+    @GetMapping("/hello")
     public String hello() {
         return "스프링부트와 연결됨!";
     }
