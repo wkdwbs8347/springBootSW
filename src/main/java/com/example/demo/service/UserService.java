@@ -93,5 +93,45 @@ public class UserService {
 		// 가져온 암호화 된 비밀번호랑 사용자가 입력한 비밀번호와 비교하는 메서드
 		return encoder.matches(user.getLoginPw(), encodePw);
 	}
+	
+	// 아이디 찾기
+	public String findLoginId(String userName, String email) {
+		 return userDao.findLoginId(userName, email);
+	}
+	
+	// 아이디 + 이메일 일치 여부
+	public boolean matchIdAndEmail(String loginId, String email) {
+		return userDao.matchIdAndEmail(loginId, email) > 0;
+	}
+	
+	// 임시 비밀번호 생성 & 업데이트
+	public String resetPassword(String loginId) {
+		// 임시 비밀번호 생성
+        String tempPw = generateTempPassword();
+
+        // 암호화 후 DB 업데이트
+        String encoded = encoder.encode(tempPw);
+        userDao.updatePassword(loginId, encoded);
+
+        return tempPw; // 프론트에게 보여줄 원본 비밀번호 반환
+	}
+	
+	// 임시 비밀번호 생성 규칙
+    private String generateTempPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        Random rnd = new Random();
+        StringBuilder pw = new StringBuilder();
+
+        for (int i = 0; i < 10; i++) {
+            pw.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+
+        return pw.toString();
+    }
+    
+    // 로그인 한 유저 정보 불러오기
+	public User getLoginUser(String loginUser) {
+		return this.userDao.getLoginUser(loginUser);
+	}
 
 }

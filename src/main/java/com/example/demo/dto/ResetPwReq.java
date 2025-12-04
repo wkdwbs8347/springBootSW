@@ -7,12 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
-    private String loginId;
-    private String loginPw;
-    private String nickname;
+public class ResetPwReq {
+	private String loginId;
     private String email;
-    private String userName;
-    private String birth;
-    private String regDate;
 }

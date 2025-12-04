@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 @Mapper
 public interface UserDao {
@@ -33,6 +34,45 @@ public interface UserDao {
     			WHERE loginId = #{loginId} 
     		""")
 	String loginChk(User user);
+    
+    // 아이디 찾기 기능
+    @Select("""
+        SELECT loginId 
+        FROM `user` 
+        WHERE userName = #{userName} 
+          AND email = #{email}
+        LIMIT 1
+    """)
+    String findLoginId(@Param("userName") String userName, @Param("email") String email);
 
+    //  아이디 + 이메일 매칭 여부 확인 (비밀번호 찾기 용)
+    @Select("""
+        SELECT COUNT(*) 
+        FROM `user` 
+        WHERE loginId = #{loginId}
+          AND email = #{email}
+    """)
+    int matchIdAndEmail(@Param("loginId") String loginId, @Param("email") String email);
+    
+ // ⭐ 임시 비밀번호를 암호화하여 저장
+    // ------------------------------
+    @Update("""
+        UPDATE `user`
+        SET loginPw = #{encodedPassword}
+        WHERE loginId = #{loginId}
+    """)
+    void updatePassword(@Param("loginId") String loginId, @Param("encodedPassword") String encodedPassword);
+    
+    // 로그인 되어있는 유저의 정보
+    @Select("""
+    		SELECT loginId
+    				, nickname
+    				, email
+    				, userName
+    				, regDate
+    			FROM `user`
+    			WHERE loginId = #{loginUser}
+    		""")
+	User getLoginUser(String loginUser);
 	
 }
