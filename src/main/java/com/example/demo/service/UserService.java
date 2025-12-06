@@ -133,5 +133,16 @@ public class UserService {
 	public User getLoginUser(String loginUser) {
 		return this.userDao.getLoginUser(loginUser);
 	}
+	
+	// 아이디 수정
+	public void updateLoginId(String currentLoginId, String newLoginId) {
+	    // 아이디 중복 체크
+	    if (!isIdAvailable(newLoginId)) {
+	        throw new RuntimeException("이미 사용 중인 아이디입니다.");
+	    }
+
+	    // DB 업데이트
+	    userDao.updateLoginId(currentLoginId, newLoginId);
+	}
 
 }

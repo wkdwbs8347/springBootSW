@@ -75,4 +75,12 @@ public interface UserDao {
     		""")
 	User getLoginUser(String loginUser);
 	
+    // 아이디 수정
+    @Update("""
+    	    UPDATE `user`
+    	    SET loginId = #{newLoginId}
+    	    WHERE loginId = #{currentLoginId}
+    	""")
+    	void updateLoginId(@Param("currentLoginId") String currentLoginId,
+    	                   @Param("newLoginId") String newLoginId);
 }

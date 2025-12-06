@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -144,4 +145,31 @@ public class UserController {
 		map.put("tempPw", tempPw);
 		return ResponseEntity.ok(map);
 	}
+	
+	// 아이디 수정
+	@PutMapping("/updateId")
+	public ResponseEntity<?> updateId(@RequestBody Map<String, String> request, HttpSession session) {
+	    String newLoginId = request.get("loginId");
+
+	    if (newLoginId == null || newLoginId.trim().length() < 4) {
+	        return ResponseEntity.badRequest().body("아이디는 4글자 이상이어야 합니다.");
+	    }
+
+	    // 현재 로그인 유저 세션 확인
+	    String currentLoginId = (String) session.getAttribute("userLoginId");
+	    if (currentLoginId == null) {
+	        return ResponseEntity.status(401).body("로그인 상태가 아닙니다.");
+	    }
+
+	    // 서비스에서 업데이트 처리
+	    try {
+	        userService.updateLoginId(currentLoginId, newLoginId);
+	        // 세션도 업데이트
+	        session.setAttribute("userLoginId", newLoginId);
+	        return ResponseEntity.ok("아이디가 수정되었습니다.");
+	    } catch (RuntimeException e) {
+	        return ResponseEntity.badRequest().body(e.getMessage());
+	    }
+	}
+	
 }
