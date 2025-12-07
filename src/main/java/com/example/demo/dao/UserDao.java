@@ -27,13 +27,6 @@ public interface UserDao {
         """)
     void insertUser(User user);
     
-    // 로그인 시도시 입력한 아이디,비밀번호 일치 여부
-    @Select("""
-    		SELECT loginPw 
-    			FROM `user` 
-    			WHERE loginId = #{loginId} 
-    		""")
-	String loginChk(User user);
     
     // 아이디 찾기 기능
     @Select("""
@@ -63,6 +56,15 @@ public interface UserDao {
     """)
     void updatePassword(@Param("loginId") String loginId, @Param("encodedPassword") String encodedPassword);
     
+    // 비밀번호 수정을 위한 현재 비밀번호 가져오기
+    @Select("""
+            SELECT loginPw
+            FROM `user`
+            WHERE loginId = #{loginId}
+    """)
+    String getPassword(String loginId);
+    
+    
     // 로그인 되어있는 유저의 정보
     @Select("""
     		SELECT loginId
@@ -70,6 +72,7 @@ public interface UserDao {
     				, email
     				, userName
     				, regDate
+    				, birth
     			FROM `user`
     			WHERE loginId = #{loginUser}
     		""")
@@ -83,4 +86,25 @@ public interface UserDao {
     	""")
     	void updateLoginId(@Param("currentLoginId") String currentLoginId,
     	                   @Param("newLoginId") String newLoginId);
+    
+    
+    // 닉네임 수정
+    @Update("""
+    		UPDATE `user`
+    		SET nickname = #{newNickname}
+    		WHERE loginId = #{currentLoginId}
+    		""")
+    void updateNickname(
+            @Param("currentLoginId") String currentLoginId,
+            @Param("newNickname") String newNickname
+    );
+    
+    // 이메일 수정
+    @Update("""
+    	    UPDATE `user`
+    	    SET email = #{newEmail}
+    	    WHERE loginId = #{loginId}
+    	""")
+    	void updateEmail(@Param("loginId") String loginId,
+    	                 @Param("newEmail") String newEmail);
 }

@@ -166,9 +166,81 @@ public class UserController {
 	        userService.updateLoginId(currentLoginId, newLoginId);
 	        // 세션도 업데이트
 	        session.setAttribute("userLoginId", newLoginId);
-	        return ResponseEntity.ok("아이디가 수정되었습니다.");
+	        return ResponseEntity.ok(Map.of("message", "아이디가 수정되었습니다."));
 	    } catch (RuntimeException e) {
-	        return ResponseEntity.badRequest().body(e.getMessage());
+	        return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+	    }
+	}
+	
+	// 닉네임 수정
+	@PutMapping("/updateNickname")
+	public ResponseEntity<?> updateNickname(@RequestBody Map<String, String> request, HttpSession session) {
+	    String newNickname = request.get("nickname");
+
+	    if (newNickname == null || newNickname.trim().length() < 2) {
+	        return ResponseEntity.badRequest().body("닉네임은 2글자 이상이어야 합니다.");
+	    }
+
+	    // 현재 로그인 유저 세션 확인
+	    String currentLoginId = (String) session.getAttribute("userLoginId");
+	    if (currentLoginId == null) {
+	        return ResponseEntity.status(401).body("로그인 상태가 아닙니다.");
+	    }
+
+	    // 서비스에서 업데이트 처리
+	    try {
+	        userService.updateNickname(currentLoginId, newNickname);
+	        return ResponseEntity.ok(Map.of("message", "닉네임이 수정되었습니다."));
+	    } catch (RuntimeException e) {
+	        return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+	    }
+	}
+	
+	// 이메일 수정
+	@PutMapping("/updateEmail")
+	public ResponseEntity<?> updateEmail(@RequestBody Map<String, String> request, HttpSession session) {
+	    String newEmail = request.get("email");
+
+	    if (newEmail == null || newEmail.trim().length() < 5) {
+	        return ResponseEntity.badRequest().body(Map.of("message","유효한 이메일을 입력해주세요."));
+	    }
+
+	    // 로그인 체크
+	    String loginId = (String) session.getAttribute("userLoginId");
+	    if (loginId == null) {
+	        return ResponseEntity.status(401).body(Map.of("message","로그인이 필요합니다"));
+	    }
+
+	    try {
+	        userService.updateEmail(loginId, newEmail);
+	        return ResponseEntity.ok(Map.of("message","이메일이 변경되었습니다."));
+	    } catch (RuntimeException e) {
+	        return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+	    }
+	}
+	
+	// 비밀번호 수정
+	@PutMapping("/updatePassword")
+	public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> request, HttpSession session) {
+	    String currentPw = request.get("currentPw");
+	    String newPw = request.get("newPw");
+
+	    // 로그인 체크
+	    String loginId = (String) session.getAttribute("userLoginId");
+	    if (loginId == null) {
+	        return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다"));
+	    }
+
+	    try {
+	        boolean success = userService.changePassword(loginId, currentPw, newPw);
+
+	        if (!success) {
+	            return ResponseEntity.badRequest().body(Map.of("message", "현재 비밀번호가 일치하지 않습니다."));
+	        }
+
+	        return ResponseEntity.ok(Map.of("message", "비밀번호가 변경되었습니다."));
+	    } catch (Exception e) {
+	        return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
 	    }
 	}
 	

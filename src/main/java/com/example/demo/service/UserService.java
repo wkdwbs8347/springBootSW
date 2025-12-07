@@ -83,7 +83,7 @@ public class UserService {
     // 로그인 검증
 	public boolean loginChk(User user) {
 		// 암호화 된 비밀번호 가져오기
-		String encodePw = this.userDao.loginChk(user);
+		String encodePw = this.userDao.getPassword(user.getLoginId());
 		
 		// 만약 아이디가 존재하지 않을때는 쿼리 결과가 null 일것이기 때문에 그 상황에 대한 처리 
 		if (encodePw == null) {
@@ -143,6 +143,42 @@ public class UserService {
 
 	    // DB 업데이트
 	    userDao.updateLoginId(currentLoginId, newLoginId);
+	}
+	
+	// 닉네임 수정
+	public void updateNickname(String currentLoginId, String newNickname) {
+		// 닉네임 중복 체크
+		if (!isNicknameAvailable(newNickname)) {
+			throw new RuntimeException("이미 사용 중인 닉네임입니다.");
+		}
+		userDao.updateNickname(currentLoginId, newNickname);
+	}
+	
+	// 이메일 수정
+	public void updateEmail(String loginId, String newEmail) {
+	    userDao.updateEmail(loginId, newEmail);
+	}
+	
+	// 비밀번호 수정
+	public boolean changePassword(String loginId, String currentPw, String newPw) {
+	    // DB에서 암호화된 기존 비밀번호 가져오기
+	    String encodedPw = userDao.getPassword(loginId);
+
+	    // 기존비밀번호 검증
+	    if (!encoder.matches(currentPw, encodedPw)) {
+	        return false;
+	    }
+	    
+	    // null, 공백 검증
+	    if(newPw == null || newPw.trim().isEmpty()){
+	        throw new RuntimeException("새 비밀번호를 입력해주세요");
+	    }
+
+	    // 암호화 후 저장
+	    String encodedNewPw = encoder.encode(newPw);
+	    userDao.updatePassword(loginId, encodedNewPw);
+
+	    return true;
 	}
 
 }
