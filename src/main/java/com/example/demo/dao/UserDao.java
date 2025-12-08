@@ -67,7 +67,8 @@ public interface UserDao {
     
     // 로그인 되어있는 유저의 정보
     @Select("""
-    		SELECT loginId
+    		SELECT id
+    				, loginId
     				, nickname
     				, email
     				, userName
