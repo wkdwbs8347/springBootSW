@@ -30,11 +30,11 @@ public class BuildingService {
             throw new RuntimeException("이미 등록된 건물입니다.");
         }
 
-        // 1️⃣ 건물 등록
+        // 건물 등록
         buildingDao.insertBuilding(dto);
         int buildingId = dto.getId();
 
-        // 2️⃣ 층별 호수 생성
+        // 층별 호수 생성
         List<Unit> units = new ArrayList<>();
         for (int floor = 1; floor <= dto.getTotalFloor(); floor++) {
             for (int i = 1; i <= dto.getRoom(); i++) {
@@ -46,5 +46,19 @@ public class BuildingService {
             }
         }
         buildingDao.insertUnits(units);
+    }
+    
+    /**
+     * 주소로 건물 목록 조회
+     */
+    public List<BuildingRegister> getBuildingsByAddress(String address) {
+        return buildingDao.selectByAddress(address);
+    }
+
+    /**
+     * 건물 ID로 층/호수 목록 조회
+     */
+    public List<Unit> getUnitsByBuilding(int buildingId) {
+        return buildingDao.selectUnitsByBuilding(buildingId);
     }
 }

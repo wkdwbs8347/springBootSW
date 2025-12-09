@@ -12,7 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Unit {
-	private int buildingId;
-	private int floor;
-	private String unitNumber;
+    private int id;           // DB PK
+    private int buildingId;   // 건물 ID
+    private int floor;        // 층
+    private String unitNumber; // 호수 ex) 101호
+    private Integer currentResidentId; // 현재 입주자 (nullable)
 }

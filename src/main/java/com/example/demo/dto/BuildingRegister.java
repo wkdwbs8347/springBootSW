@@ -16,6 +16,6 @@ public class BuildingRegister {
     private String address; // building.address
     private int totalFloor; // building.total_floor
     private int room; // unit.unitNumber
-    private int createdUsr; // building.created_usr
+    private int createdUserId; // building.created_usr
     private int id;   // insert 후 MyBatis에서 자동 생성키 반환용
 }
