@@ -32,18 +32,18 @@ public interface ResidenceDao {
 
     // 신청 상세 정보 조회
     @Select("""
-        SELECT r.id, r.userId, u.nickname as userName, r.floor, u.id as unitId, 
-               un.unitNumber, r.requestDate, r.status
-        FROM residence r
-        JOIN user u ON r.userId=u.id
-        JOIN unit un ON r.unitId=un.id
-        WHERE r.id=#{id}
-    """)
-    Residence detail(@Param("id") int id);
+    	    SELECT r.id, r.userId, r.buildingId, u.nickname, r.floor, 
+    	           u.id as unitId, un.unitNumber, r.requestDate, r.status
+    	    FROM residence r
+    	    JOIN user u ON r.userId=u.id
+    	    JOIN unit un ON r.unitId=un.id
+    	    WHERE r.id=#{id}
+    	""")
+    	Residence detail(@Param("id") int id);
 
     // 건물별 신청 목록 (waiting 상태만)
     @Select("""
-        SELECT r.id, r.userId, u.nickname as userName, r.floor, u.id as unitId, 
+        SELECT r.id, r.userId, r.buildingId, u.nickname, r.floor, u.id as unitId, 
                un.unitNumber, r.requestDate, r.status
         FROM residence r
         JOIN user u ON r.userId=u.id

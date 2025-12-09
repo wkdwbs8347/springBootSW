@@ -3,50 +3,128 @@ CREATE DATABASE sweetHome;
 USE sweetHome;
 
 -- 회원
-CREATE TABLE `user` (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+CREATE TABLE USER (
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, regDate DATETIME NOT NULL DEFAULT NOW()
 	, updateDate DATETIME NOT NULL DEFAULT NOW()
 	, loginId VARCHAR(50) NOT NULL UNIQUE
 	, loginPw VARCHAR(150) NOT NULL
-	, email VARCHAR(100) NOT NULL UNIQUE
+	, email VARCHAR(100) NOT NULL
 	, nickname VARCHAR(100) NOT NULL UNIQUE
 	, userName VARCHAR(50) NOT NULL
 	, birth DATE NOT NULL
 );
 
+
 -- 건물 등록
 CREATE TABLE building (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, regDate DATETIME NOT NULL DEFAULT NOW() COMMENT '건물 등록일'
 	, updateDate DATETIME NOT NULL DEFAULT NOW() COMMENT '건물 정보 수정일'
-	, created_usr INT UNSIGNED NOT NULL COMMENT '건물 등록자 (user.id)'
+	, createdUserId INT UNSIGNED NOT NULL COMMENT '건물 등록자 (user.id)'
 	, `name` VARCHAR(100) NOT NULL COMMENT '건물명'
 	, address VARCHAR(200) NOT NULL COMMENT '도로명 주소'
-	, total_floor INT UNSIGNED NOT NULL COMMENT '건물의 총 층수'
+	, totalFloor INT UNSIGNED NOT NULL COMMENT '건물의 총 층수'
+
+	, CONSTRAINT unique_building UNIQUE (NAME, address)
+
+	, CONSTRAINT fk_building_user FOREIGN KEY (createdUserId) REFERENCES `user`(id) -- 건물 등록자
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
 );
+
+
+-- 건물 등록시 건물 멤버십 테이블에 owner 자동 등록
+CREATE TRIGGER trg_building_owner
+	AFTER INSERT ON building
+	FOR EACH ROW
+	INSERT INTO building_member(buildingId, userId, ROLE)
+	VALUES (NEW.id, NEW.createdUserId, 'owner');
+
 
 -- 등록 된 건물의 호수 정보
 CREATE TABLE unit (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT 
-	, buildingId INT UNSIGNED NOT NULL UNIQUE COMMENT '어떤 건물인지'
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+	, buildingId INT UNSIGNED NOT NULL COMMENT '어떤 건물인지'
 	, `floor` INT UNSIGNED NOT NULL COMMENT '층'
-	, unitNumber VARCHAR(20) COMMENT '호번호 ex) 101, 102...401, 402'
+	, unitNumber VARCHAR(20) NOT NULL COMMENT '호번호 ex) 101호, 102호...401호, 402호'
+	, currentResidentId INT UNSIGNED NULL COMMENT '현재 입주자'
+
+	, UNIQUE(buildingId, `floor`, unitNumber)
+
+	, CONSTRAINT fk_unit_building FOREIGN KEY (buildingId) REFERENCES building(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+	, CONSTRAINT fk_unit_currentResident FOREIGN KEY (currentResidentId) REFERENCES USER(id)
+			ON DELETE SET NULL
+			ON UPDATE CASCADE
 );
 
+
 -- 입주 신청
- CREATE TABLE residence (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+CREATE TABLE residence (
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, requestDate DATETIME NOT NULL DEFAULT NOW() COMMENT '신청일'
 	, userId INT UNSIGNED NOT NULL COMMENT '입주자'
 	, buildingId INT UNSIGNED NOT NULL COMMENT '어떤 건물인지'
+	, `floor` INT UNSIGNED NOT NULL COMMENT '몇층 인지'
 	, unitId INT UNSIGNED NOT NULL COMMENT '몇호 인지'
 	, `status` VARCHAR(50) DEFAULT 'waiting' COMMENT '승인: checked , 대기: waiting'
- );
- 
- -- 문제 신고
- CREATE TABLE report (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+
+	, CONSTRAINT fk_residence_user FOREIGN KEY (userId)	REFERENCES `user`(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+	, CONSTRAINT fk_residence_building FOREIGN KEY (buildingId)	REFERENCES building(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+	, CONSTRAINT fk_residence_unit FOREIGN KEY (unitId) REFERENCES unit(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+);
+
+
+-- 알림 테이블
+CREATE TABLE notification (
+    id INT PRIMARY KEY AUTO_INCREMENT
+	, userId INT UNSIGNED NOT NULL-- 알림 받는 owner
+	, message VARCHAR(255) NOT NULL
+	, link VARCHAR(255) NOT NULL
+	, isRead TINYINT NOT NULL DEFAULT 0 
+	, regDate DATETIME NOT NULL DEFAULT NOW()
+
+	, CONSTRAINT fk_notification_user FOREIGN KEY (userId) REFERENCES `user`(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+);
+
+
+-- 건물 멤버십(입주자, 관리권한, 참여여부)
+CREATE TABLE building_member (
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+	, buildingId INT UNSIGNED NOT NULL COMMENT '어떤 건물'
+	, userId INT UNSIGNED NOT NULL COMMENT '참여자 owner: building.created_usr / resident: user.id'
+	, ROLE VARCHAR(20) NOT NULL DEFAULT 'resident' COMMENT 'owner: 관리자 , resident: 입주자'
+	, joinedAt DATETIME NOT NULL DEFAULT NOW() COMMENT '등록일'
+	, `active` BOOLEAN NOT NULL DEFAULT TRUE COMMENT '참여(채팅/게시판 사용 가능 여부)'
+
+	, CONSTRAINT fk_member_building FOREIGN KEY (buildingId) REFERENCES building(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+	, CONSTRAINT fk_member_user FOREIGN KEY (userId) REFERENCES `user`(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+, UNIQUE(buildingId, userId)
+);
+
+
+-- 문제 신고
+CREATE TABLE report (
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, regDate DATETIME NOT NULL DEFAULT NOW() COMMENT '신고 등록일'
 	, buildingId INT UNSIGNED NOT NULL
 	, reportUserId INT UNSIGNED NOT NULL COMMENT '신고자'
@@ -54,79 +132,155 @@ CREATE TABLE unit (
 	, reportType VARCHAR(50) NOT NULL COMMENT '소음, 냄새 등 문제타입'
 	, reportMsg TEXT NOT NULL COMMENT '신고 내용'
 	, refinedMsg TEXT NOT NULL COMMENT 'AI 변환 내용'
- );
- 
- -- 건물별 게시판 종류
- CREATE TABLE buildingBoard (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+
+	, CONSTRAINT fk_report_building FOREIGN KEY (buildingId) REFERENCES building(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+	, CONSTRAINT fk_report_user FOREIGN KEY (reportUserId) REFERENCES `user`(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+	, CONSTRAINT fk_report_unit FOREIGN KEY (targetUnitId) REFERENCES unit(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+);
+
+
+-- 건물별 게시판 종류
+CREATE TABLE buildingBoard (
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, boardType VARCHAR(50) NOT NULL UNIQUE COMMENT '게시판 종류'
- );
- 
- -- 건물별 게시물
- CREATE TABLE buildingArticle (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+);
+
+
+-- 건물별 게시물
+CREATE TABLE buildingArticle (
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, regDate DATETIME NOT NULL DEFAULT NOW()
 	, updateDate DATETIME NOT NULL DEFAULT NOW()
 	, userId INT UNSIGNED NOT NULL COMMENT '작성자'
 	, boardId INT UNSIGNED NOT NULL COMMENT '게시판 유형'
 	, title VARCHAR(100) NOT NULL
 	, content TEXT NOT NULL
- );
- 
- -- 건물별 게시글 댓글
- CREATE TABLE reply (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+
+	, CONSTRAINT fk_article_user FOREIGN KEY (userId) REFERENCES `user`(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+	, CONSTRAINT fk_article_board FOREIGN KEY (boardId) REFERENCES buildingBoard(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+);
+
+
+-- 건물별 게시글 댓글
+CREATE TABLE reply (
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, regDate DATETIME NOT NULL DEFAULT NOW()
 	, updateDate DATETIME NOT NULL DEFAULT NOW()
 	, userId INT UNSIGNED NOT NULL COMMENT '작성자'
 	, content VARCHAR(500) NOT NULL COMMENT '댓글 내용'
 	, relTypeCode VARCHAR(50) NOT NULL COMMENT '댓글을 어디에 달았는지 ex) 게시글 = article'
 	, relTypeNo INT UNSIGNED NOT NULL COMMENT '댓글을 작성한곳의 번호'
- );
- 
- -- 1:1 채팅방
- CREATE TABLE privateChatRoom (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+
+	, CONSTRAINT fk_reply_user FOREIGN KEY (userId)	REFERENCES `user`(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+);
+
+
+-- 1:1 채팅방
+CREATE TABLE privateChatRoom (
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, regDate DATETIME NOT NULL DEFAULT NOW()
 	, firstUserId INT UNSIGNED NOT NULL COMMENT '첫번째 참가자'
 	, secondUserId INT UNSIGNED NOT NULL COMMENT '두번째 참가자'
- );
- 
- -- 1:1 채팅방 메세지
- CREATE TABLE privateMsg (
-	id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+
+	, CONSTRAINT fk_chatroom_firstUser FOREIGN KEY (firstUserId) REFERENCES `user`(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+	, CONSTRAINT fk_chatroom_secondUser FOREIGN KEY (secondUserId) REFERENCES `user`(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+);
+
+
+-- 1:1 채팅방 메세지
+CREATE TABLE privateMsg (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, chatRoomId INT UNSIGNED NOT NULL COMMENT '해당 채팅방 번호'
-	, SentbyUserId INT UNSIGNED NOT NULL COMMENT '메세지 보낸 유저'
+	, sentbyUserId INT UNSIGNED NOT NULL COMMENT '메세지 보낸 유저'
 	, content TEXT NOT NULL COMMENT '메세지 내용'
 	, sentDate DATETIME NOT NULL DEFAULT NOW() COMMENT '메세지 전송시간'
- );
+
+	, CONSTRAINT fk_msg_chatroom FOREIGN KEY (chatRoomId) REFERENCES privateChatRoom(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+	, CONSTRAINT fk_msg_user FOREIGN KEY (sentbyUserId) REFERENCES `user`(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+);
+
 
 -- 건물 별 단체 채팅방
 CREATE TABLE buildingChatRoom (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, regDate DATETIME NOT NULL DEFAULT NOW()
-	, buildingId INT NOT NULL UNIQUE COMMENT '빌딩 식별'
+	, buildingId INT UNSIGNED NOT NULL UNIQUE COMMENT '빌딩 식별'
+
+	, CONSTRAINT fk_buildingChat_building FOREIGN KEY (buildingId) REFERENCES building(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
 );
+
 
 -- 단체 채팅방 메세지
 CREATE TABLE buildingChatMsg (
-	id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT
-	, roomId INT UNSIGNED NOT NULL COMMENT '채팅방 번호' 
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+	, roomId INT UNSIGNED NOT NULL COMMENT '채팅방 번호'
 	, userId INT UNSIGNED NOT NULL COMMENT '메세지 보낸 사람'
 	, content TEXT NOT NULL COMMENT '메세지 내용'
 	, sentDate DATETIME NOT NULL DEFAULT NOW() COMMENT '메세지 전송시간'
+
+	, CONSTRAINT fk_buildingChatMsg_room FOREIGN KEY (roomId) REFERENCES buildingChatRoom(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+
+	, CONSTRAINT fk_buildingChatMsg_user FOREIGN KEY (userId) REFERENCES `user`(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
 );
+
 
 -- 관리자에게 제공할 월간 보고서
 CREATE TABLE monthReport (
-	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, buildingId INT UNSIGNED NOT NULL
 	, `month` CHAR(7) NOT NULL COMMENT '몇년도 몇월의 보고서인지 ex) 2025-11'
 	, summary TEXT NOT NULL COMMENT 'AI 요약'
 	, mostType VARCHAR(50) COMMENT 'TOP 1 신고유형'
 	, secondMostType VARCHAR(50) COMMENT 'TOP 2 신고유형'
-	, thirdMostType VARCHAR(50) COMMENT 'TOP 3 신고유형' 
+	, thirdMostType VARCHAR(50) COMMENT 'TOP 3 신고유형'
 	, regDate DATETIME NOT NULL DEFAULT NOW() COMMENT '보고서 생성일'
+
+	, CONSTRAINT fk_monthReport_building FOREIGN KEY (buildingId) REFERENCES building(id)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
 );
 
+
+
+ALTER TABLE building AUTO_INCREMENT = 1;
+ALTER TABLE unit AUTO_INCREMENT = 1;
+ALTER TABLE building_member AUTO_INCREMENT = 1;
+
+
 SELECT * FROM `user`;
+SELECT * FROM building;
+SELECT * FROM unit;
+SELECT * FROM building_member;
+SELECT * FROM residence;
+SELECT * FROM notification;
