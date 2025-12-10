@@ -85,9 +85,15 @@ public class UserController {
 		// 세션 생성 (검증을 통해 loginChk에 true 가 남는다면 로그인 검증에 성공했다는 의미)
 		if (loginChk) {
 			session.setAttribute("userLoginId", user.getLoginId());
+			
 			// 로그인 성공 직후 로그인한 유저 정보를 프론트에 넘겨주기 위함
 			String loginUser = (String) session.getAttribute("userLoginId");
+			// 현재 로그인 되어있는 유저 객체
 			User users = this.userService.getLoginUser(loginUser);
+	        // Owner 여부 확인 후 세션에 저장
+	        boolean isOwner = userService.isOwner(users.getId());
+	        session.setAttribute("isOwner", isOwner);
+	        session.setAttribute("userId", users.getId());
 			result.put("loginUser", users);
 		}
 		return result;
@@ -98,12 +104,14 @@ public class UserController {
 	public Map<String, Object> loginCheck(HttpSession session) {
 		Map<String, Object> map = new HashMap<>();
 		String loginUser = (String) session.getAttribute("userLoginId");
+		Boolean isOwner = (Boolean) session.getAttribute("isOwner");
 		User users = this.userService.getLoginUser(loginUser);
 
 		if (loginUser != null) {
 			map.put("isLogin", true);
 			map.put("loginId", loginUser);
 			map.put("loginUser", users);
+			map.put("isOwner", isOwner);
 		} else {
 			map.put("isLogin", false);
 		}

@@ -180,5 +180,11 @@ public class UserService {
 
 	    return true;
 	}
+	
+    // Owner 여부 확인
+    public boolean isOwner(int userId) {
+        int ownedCount = userDao.countOwnedBuildings(userId);
+        return ownedCount > 0;
+    }
 
 }

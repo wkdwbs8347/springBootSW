@@ -108,4 +108,8 @@ public interface UserDao {
     	""")
     	void updateEmail(@Param("loginId") String loginId,
     	                 @Param("newEmail") String newEmail);
+    
+    // Owner 여부 확인
+    @Select("SELECT COUNT(*) FROM building WHERE createdUserId = #{userId}")
+    int countOwnedBuildings(int userId);
 }

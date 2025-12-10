@@ -12,10 +12,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BuildingRegister {
+	private int id;   // insert 후 MyBatis에서 자동 생성키 반환용
+	private int createdUserId; // building.created_usr
 	private String name; // building.name
     private String address; // building.address
+    private String regDate;
     private int totalFloor; // building.total_floor
     private int room; // unit.unitNumber
-    private int createdUserId; // building.created_usr
-    private int id;   // insert 후 MyBatis에서 자동 생성키 반환용
 }

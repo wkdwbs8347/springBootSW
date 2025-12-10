@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import com.example.demo.dto.BuildingRegister;
 import com.example.demo.dto.Unit;
 import com.example.demo.service.BuildingService;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -54,4 +56,40 @@ public class BuildingController {
     public List<Unit> getFloorUnits(@RequestParam int buildingId) {
         return buildingService.getUnitsByBuilding(buildingId);
     }
+    
+    // owner 리스트 페이지
+    @GetMapping("/byOwner")
+    public ResponseEntity<?> getBuildingsByOwner(HttpSession session) {
+    	Integer userId = (Integer) session.getAttribute("userId");
+    	Boolean isOwner = (Boolean) session.getAttribute("isOwner");
+    	if (userId == null || isOwner == null || !isOwner) {
+    		return ResponseEntity.status(403).body("조회 권한이 없습니다.");
+    	}
+    	List<BuildingRegister> buildings = buildingService.getBuildingsByOwner(userId);
+    	return ResponseEntity.ok(buildings);
+    }
+    
+    // resident 리스트 페이지
+    @GetMapping("/byResident")
+    public ResponseEntity<?> getBuildingsByResident(HttpSession session) {
+    	Integer userId = (Integer) session.getAttribute("userId");
+    	if (userId == null) return ResponseEntity.status(401).body("로그인이 필요합니다.");
+    	List<BuildingRegister> buildings = buildingService.getBuildingsByResident(userId);
+    	return ResponseEntity.ok(buildings);
+    }
+    
+    // 건물 상세 조회 (ID)
+    @GetMapping("/detail/{id}")
+    public ResponseEntity<?> getBuildingDetail(@PathVariable int id, HttpSession session) {
+        Integer userId = (Integer) session.getAttribute("userId"); // 로그인 유저 id
+        Boolean isOwner = (Boolean) session.getAttribute("isOwner"); // Owner 여부 (세션에 저장)
+        
+        if (userId == null) return ResponseEntity.status(401).body("로그인이 필요합니다");
+
+        BuildingRegister building = buildingService.getBuildingDetail(id, userId, isOwner != null && isOwner);
+        if (building == null) return ResponseEntity.status(403).body("조회 권한이 없습니다.");
+
+        return ResponseEntity.ok(building);
+    }
+    
 }

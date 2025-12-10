@@ -37,4 +37,34 @@ public interface BuildingDao {
     // 특정 건물의 층/호수 조회
     @Select("SELECT id, buildingId, floor, unitNumber, currentResidentId FROM unit WHERE buildingId = #{buildingId}")
     List<Unit> selectUnitsByBuilding(@Param("buildingId") int buildingId);
+    
+    // owner 리스트 페이지
+    @Select("SELECT id, name, address, totalFloor, createdUserId, regDate FROM building WHERE createdUserId = #{userId}")
+    List<BuildingRegister> selectByOwnerList(@Param("userId") Integer userId);
+    
+    // resident 리스트 페이지
+    @Select("""
+        SELECT b.id, b.name, b.address, b.totalFloor, b.createdUserId, regDate
+        FROM building b
+        JOIN building_member bm ON bm.buildingId = b.id
+        WHERE bm.userId = #{userId} AND bm.active = TRUE AND bm.ROLE = 'resident'
+    """)
+    List<BuildingRegister> selectByResidentList(@Param("userId") Integer userId);
+    
+    // owner 용 건물 상세 조회
+    @Select("""
+    	    SELECT id, name, address, totalFloor, createdUserId, regDate
+    	    FROM building
+    	    WHERE createdUserId = #{userId} AND id = #{buildingId}
+    	""")
+    	BuildingRegister selectByOwner(@Param("userId") int userId, @Param("buildingId") int buildingId);
+
+    // resident 용 건물 상세 조회
+    @Select("""
+    	    SELECT b.id, b.name, b.address, b.totalFloor, b.createdUserId, regDate
+    	    FROM building b
+    	    JOIN building_member bm ON bm.buildingId = b.id
+    	    WHERE bm.userId = #{userId} AND b.id = #{buildingId} AND bm.active = TRUE
+    	""")
+    	BuildingRegister selectByResident(@Param("userId") int userId, @Param("buildingId") int buildingId);
 }

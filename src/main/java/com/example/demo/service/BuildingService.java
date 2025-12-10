@@ -61,4 +61,24 @@ public class BuildingService {
     public List<Unit> getUnitsByBuilding(int buildingId) {
         return buildingDao.selectUnitsByBuilding(buildingId);
     }
+    
+    // owner 리스트 페이지
+    public List<BuildingRegister> getBuildingsByOwner(Integer userId) {
+        return buildingDao.selectByOwnerList(userId);
+    }
+    
+    // resident 리스트 페이지
+    public List<BuildingRegister> getBuildingsByResident(Integer userId) {
+        return buildingDao.selectByResidentList(userId);
+    }
+    
+    
+    // owner , resident 건물 상세 조회 분기처리
+    public BuildingRegister getBuildingDetail(int buildingId, int userId, boolean isOwner) {
+        if (isOwner) {
+            return buildingDao.selectByOwner(userId, buildingId);
+        } else {
+            return buildingDao.selectByResident(userId, buildingId);
+        }
+    }
 }
