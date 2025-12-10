@@ -25,6 +25,21 @@ public interface ResidenceDao {
     // 신청 상태 업데이트 (승인)
     @Update("UPDATE residence SET status=#{status} WHERE id=#{id}")
     void updateStatus(@Param("id") int id, @Param("status") String status);
+    
+    // 신청 승인시 건물멤버에 등록
+    @Insert("""
+    	    INSERT IGNORE INTO building_member(buildingId, userId, role, joinedAt, active)
+    	    VALUES(#{buildingId}, #{userId}, 'resident', NOW(), TRUE)
+    	""")
+    void insertBuildingMember(@Param("buildingId") int buildingId, @Param("userId") int userId);
+    
+    // 신청 승인시 unit 호수정보에 해당 멤버 등록
+    @Update("""
+    	    UPDATE unit 
+    	    SET currentResidentId = #{userId} 
+    	    WHERE id = #{unitId}
+    	""")
+    void updateCurrentResident(@Param("unitId") int unitId, @Param("userId") int userId);
 
     // 신청 삭제 (거절)
     @Delete("DELETE FROM residence WHERE id=#{id}")
@@ -32,22 +47,26 @@ public interface ResidenceDao {
 
     // 신청 상세 정보 조회
     @Select("""
-    	    SELECT r.id, r.userId, r.buildingId, u.nickname, r.floor, 
-    	           u.id as unitId, un.unitNumber, r.requestDate, r.status
+    	    SELECT r.id, r.userId, r.buildingId, r.floor, r.requestDate, r.status, r.unitId, 
+    			    u.nickname, un.unitNumber
     	    FROM residence r
-    	    JOIN user u ON r.userId=u.id
-    	    JOIN unit un ON r.unitId=un.id
+    	    JOIN user u 
+    	    ON r.userId = u.id
+    	    JOIN unit un 
+    	    ON r.unitId = un.id
     	    WHERE r.id=#{id}
     	""")
     	Residence detail(@Param("id") int id);
 
     // 건물별 신청 목록 (waiting 상태만)
     @Select("""
-        SELECT r.id, r.userId, r.buildingId, u.nickname, r.floor, u.id as unitId, 
-               un.unitNumber, r.requestDate, r.status
+    	SELECT r.id, r.userId, r.buildingId, r.floor, r.requestDate, r.status, r.unitId, 
+    			u.nickname, un.unitNumber
         FROM residence r
-        JOIN user u ON r.userId=u.id
-        JOIN unit un ON r.unitId=un.id
+        JOIN user u 
+        ON r.userId = u.id
+        JOIN unit un 
+        ON r.unitId = un.id
         WHERE r.buildingId=#{buildingId} AND r.status='waiting'
         ORDER BY r.requestDate DESC
     """)
@@ -57,11 +76,7 @@ public interface ResidenceDao {
     @Select("SELECT createdUserId FROM building WHERE id=#{buildingId}")
     Integer findBuildingOwner(int buildingId);
     
-    @Insert("""
-    	    INSERT IGNORE INTO building_member(buildingId, userId, role, joinedAt, active)
-    	    VALUES(#{buildingId}, #{userId}, 'resident', NOW(), TRUE)
-    	""")
-    	void insertBuildingMember(@Param("buildingId") int buildingId, @Param("userId") int userId);
+
 }
 
 

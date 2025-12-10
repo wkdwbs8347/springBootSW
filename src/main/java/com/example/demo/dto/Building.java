@@ -11,12 +11,15 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BuildingRegister {
+public class Building {
 	private int id;   // insert 후 MyBatis에서 자동 생성키 반환용
 	private int createdUserId; // building.created_usr
+	private String nickname;
 	private String name; // building.name
     private String address; // building.address
     private String regDate;
     private int totalFloor; // building.total_floor
-    private int room; // unit.unitNumber
+    private int floor; // 층
+    private int unitNumber; // unit.unitNumber
+    private int unitCnt; // 세대 수
 }

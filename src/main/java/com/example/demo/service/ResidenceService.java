@@ -43,7 +43,10 @@ public class ResidenceService {
     public void approve(int id) {
     	residenceDao.updateStatus(id, "checked");
         Residence res = residenceDao.detail(id);
+        // 건물 멤버 등록
         residenceDao.insertBuildingMember(res.getBuildingId(), res.getUserId());
+        // unit 현재 입주자 업데이트
+        residenceDao.updateCurrentResident(res.getUnitId(), res.getUserId());
     }
 
     // 입주 거절

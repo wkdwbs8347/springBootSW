@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.dto.BuildingRegister;
+import com.example.demo.dto.Building;
 import com.example.demo.dto.Unit;
 import com.example.demo.service.BuildingService;
 
@@ -31,7 +31,7 @@ public class BuildingController {
 	 * totalFloor: 5, room: 4 }
 	 */
 	@PostMapping("/register")
-	public ResponseEntity<?> register(@RequestBody BuildingRegister payload) {
+	public ResponseEntity<?> register(@RequestBody Building payload) {
 	    try {
 	        buildingService.registerBuilding(payload);
 	        return ResponseEntity.ok().body(Map.of("success", true, "message", "건물 등록 완료!"));
@@ -45,7 +45,7 @@ public class BuildingController {
      * 주소별 건물 조회
      */
     @GetMapping("/byAddress")
-    public List<BuildingRegister> getBuildingsByAddress(@RequestParam String address) {
+    public List<Building> getBuildingsByAddress(@RequestParam String address) {
         return buildingService.getBuildingsByAddress(address);
     }
 
@@ -65,7 +65,7 @@ public class BuildingController {
     	if (userId == null || isOwner == null || !isOwner) {
     		return ResponseEntity.status(403).body("조회 권한이 없습니다.");
     	}
-    	List<BuildingRegister> buildings = buildingService.getBuildingsByOwner(userId);
+    	List<Building> buildings = buildingService.getBuildingsByOwner(userId);
     	return ResponseEntity.ok(buildings);
     }
     
@@ -74,7 +74,7 @@ public class BuildingController {
     public ResponseEntity<?> getBuildingsByResident(HttpSession session) {
     	Integer userId = (Integer) session.getAttribute("userId");
     	if (userId == null) return ResponseEntity.status(401).body("로그인이 필요합니다.");
-    	List<BuildingRegister> buildings = buildingService.getBuildingsByResident(userId);
+    	List<Building> buildings = buildingService.getBuildingsByResident(userId);
     	return ResponseEntity.ok(buildings);
     }
     
@@ -86,7 +86,7 @@ public class BuildingController {
         
         if (userId == null) return ResponseEntity.status(401).body("로그인이 필요합니다");
 
-        BuildingRegister building = buildingService.getBuildingDetail(id, userId, isOwner != null && isOwner);
+        Building building = buildingService.getBuildingDetail(id, userId, isOwner != null && isOwner);
         if (building == null) return ResponseEntity.status(403).body("조회 권한이 없습니다.");
 
         return ResponseEntity.ok(building);

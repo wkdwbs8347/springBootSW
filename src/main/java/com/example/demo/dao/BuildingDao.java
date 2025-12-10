@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.example.demo.dto.BuildingRegister;
+import com.example.demo.dto.Building;
 import com.example.demo.dto.Unit;
 
 @Mapper
@@ -18,53 +18,72 @@ public interface BuildingDao {
 	@Insert("INSERT INTO building (createdUserId, name, address, totalFloor) "
 			+ "VALUES (#{createdUserId}, #{name}, #{address}, #{totalFloor})")
 	@Options(useGeneratedKeys = true, keyProperty = "id")
-	void insertBuilding(BuildingRegister paylode);
+	void insertBuilding(Building paylode);
 
 	// 단위 호수 batch insert
 	@Insert({ "<script>", "INSERT INTO unit (buildingId, `floor`, unitNumber) VALUES ",
 			"<foreach collection='list' item='unit' separator=','>",
 			"(#{unit.buildingId}, #{unit.floor}, #{unit.unitNumber})", "</foreach>", "</script>" })
 	void insertUnits(List<Unit> units);
-	
+
 	// 이름+주소로 존재 여부 체크
-    @Select("SELECT COUNT(*) FROM building WHERE name = #{name} AND address = #{address}")
-    int countByNameAndAddress(@Param("name") String name, @Param("address") String address);
-    
-    // 주소별 건물 조회 (MoveInPage)
-    @Select("SELECT id, name, address, totalFloor FROM building WHERE address = #{address}")
-    List<BuildingRegister> selectByAddress(@Param("address") String address);
+	@Select("SELECT COUNT(*) FROM building WHERE name = #{name} AND address = #{address}")
+	int countByNameAndAddress(@Param("name") String name, @Param("address") String address);
 
-    // 특정 건물의 층/호수 조회
-    @Select("SELECT id, buildingId, floor, unitNumber, currentResidentId FROM unit WHERE buildingId = #{buildingId}")
-    List<Unit> selectUnitsByBuilding(@Param("buildingId") int buildingId);
-    
-    // owner 리스트 페이지
-    @Select("SELECT id, name, address, totalFloor, createdUserId, regDate FROM building WHERE createdUserId = #{userId}")
-    List<BuildingRegister> selectByOwnerList(@Param("userId") Integer userId);
-    
-    // resident 리스트 페이지
-    @Select("""
-        SELECT b.id, b.name, b.address, b.totalFloor, b.createdUserId, regDate
-        FROM building b
-        JOIN building_member bm ON bm.buildingId = b.id
-        WHERE bm.userId = #{userId} AND bm.active = TRUE AND bm.ROLE = 'resident'
-    """)
-    List<BuildingRegister> selectByResidentList(@Param("userId") Integer userId);
-    
-    // owner 용 건물 상세 조회
-    @Select("""
-    	    SELECT id, name, address, totalFloor, createdUserId, regDate
-    	    FROM building
-    	    WHERE createdUserId = #{userId} AND id = #{buildingId}
-    	""")
-    	BuildingRegister selectByOwner(@Param("userId") int userId, @Param("buildingId") int buildingId);
+	// 주소별 건물 조회 (MoveInPage)
+	@Select("SELECT id, name, address, totalFloor FROM building WHERE address = #{address}")
+	List<Building> selectByAddress(@Param("address") String address);
 
-    // resident 용 건물 상세 조회
-    @Select("""
-    	    SELECT b.id, b.name, b.address, b.totalFloor, b.createdUserId, regDate
-    	    FROM building b
-    	    JOIN building_member bm ON bm.buildingId = b.id
-    	    WHERE bm.userId = #{userId} AND b.id = #{buildingId} AND bm.active = TRUE
-    	""")
-    	BuildingRegister selectByResident(@Param("userId") int userId, @Param("buildingId") int buildingId);
+	// 특정 건물의 층/호수 조회
+	@Select("SELECT id, buildingId, floor, unitNumber, currentResidentId FROM unit WHERE buildingId = #{buildingId}")
+	List<Unit> selectUnitsByBuilding(@Param("buildingId") int buildingId);
+
+	// owner 리스트 페이지
+	@Select("SELECT id, name, address, totalFloor, createdUserId, regDate "
+			+ "FROM building WHERE createdUserId = #{userId}")
+	List<Building> selectByOwnerList(@Param("userId") Integer userId);
+
+	// resident 리스트 페이지
+	@Select("""
+			    SELECT b.id, b.name, b.address, b.totalFloor, b.createdUserId, regDate
+			    FROM building b
+			    JOIN building_member bm ON bm.buildingId = b.id
+			    WHERE bm.userId = #{userId} AND bm.active = TRUE AND bm.ROLE = 'resident'
+			""")
+	List<Building> selectByResidentList(@Param("userId") Integer userId);
+
+	// owner 용 건물 상세 조회
+	@Select("""
+			SELECT b.id, b.`name`, b.address, b.totalFloor, b.createdUserId, b.regDate, u.nickname, COUNT(un.Id) AS unitCnt
+				FROM building AS b
+				JOIN `user` AS u
+				ON b.createdUserId = u.id
+				JOIN unit AS un
+				ON un.buildingId = b.id
+				WHERE b.createdUserId = #{userId} AND b.id = #{buildingId} 
+				""")
+	Building selectByOwner(@Param("userId") int userId, @Param("buildingId") int buildingId);
+
+	// resident 용 건물 상세 조회
+	@Select("""
+			SELECT b.id
+					, b.name
+					, b.address
+					, b.totalFloor
+					, b.createdUserId
+					, bm.joinedAt AS regDate
+					, u.nickname
+					, COUNT(un.Id) AS unitCnt
+					, un.unitNumber
+					, un.floor
+				FROM building b
+				JOIN building_member bm 
+				ON bm.buildingId = b.id
+				JOIN `user` AS u
+				ON bm.userId = u.id
+				JOIN unit AS un
+				ON un.buildingId = b.id
+				WHERE bm.userId = 2 AND b.id = 1 AND bm.active = TRUE;
+			""")
+	Building selectByResident(@Param("userId") int userId, @Param("buildingId") int buildingId);
 }
