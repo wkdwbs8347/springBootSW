@@ -8,12 +8,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
-	private int id;
-    private String loginId;
-    private String loginPw;
-    private String nickname;
-    private String email;
-    private String userName;
-    private String birth;
-    private String regDate;
+	private int id; // pk 
+    private String loginId; // 로그인Id
+    private String loginPw; // 로그인Pw
+    private String nickname; // 닉네임
+    private String email; // 이메일
+    private String userName; // 이름
+    private String birth; // 생일
+    private String regDate; // 가입일
+    private String profileImage; // 프로필 이미지
 }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dto.EmailRequest;
 import com.example.demo.dto.ResetPwReq;
@@ -252,4 +253,44 @@ public class UserController {
 	    }
 	}
 	
+	/**
+     * 프로필 이미지 업로드
+     * - 세션 기반으로 로그인 유저의 id(userId) 확인
+     * - 파일 저장 후 DB에 업데이트
+     * - 저장된 URL 반환: { profileImage: "/uploads/파일명" }
+     */
+    @PostMapping("/upload-profile-image")
+    public ResponseEntity<?> uploadProfileImage(@RequestParam("file") MultipartFile file, HttpSession session) {
+        try {
+            Integer userId = (Integer) session.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다"));
+            }
+
+            String imagePath = userService.uploadProfileImage(userId, file);
+            Map<String, String> res = new HashMap<>();
+            res.put("profileImage", imagePath);
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+    
+    // 프로필 기본이미지로 변경
+    @PostMapping("/reset-profile-image")
+    public ResponseEntity<?> resetProfileImage(HttpSession session) {
+        Integer userId = (Integer) session.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다"));
+        }
+
+        // 기본 이미지 경로
+        String defaultImg = "/images/defaultProfileImg.jpg";
+
+        // DB 업데이트
+        userService.resetProfileImage(userId, defaultImg);
+
+        return ResponseEntity.ok(Map.of("profileImage", defaultImg));
+    }
 }

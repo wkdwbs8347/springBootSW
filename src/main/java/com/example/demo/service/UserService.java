@@ -1,14 +1,19 @@
 package com.example.demo.service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dao.UserDao;
 import com.example.demo.dto.User;
@@ -185,6 +190,45 @@ public class UserService {
     public boolean isOwner(int userId) {
         int ownedCount = userDao.countOwnedBuildings(userId);
         return ownedCount > 0;
+    }
+    
+    // 프로필 이미지 업로드
+    /**
+     * 1) MultipartFile을 서버 로컬의 uploads 폴더에 저장
+     * 2) DB에 /uploads/{filename} 형태로 저장
+     * 3) 저장된 경로 반환
+     */
+    public String uploadProfileImage(int userId, MultipartFile file) throws Exception {
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("파일이 비어 있습니다.");
+        }
+
+        Path uploadDir = Paths.get("uploads");
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+
+        // 안전한 파일명 생성 (타임스탬프 + UUID + 원본이름)
+        String original = file.getOriginalFilename();
+        String ext = "";
+        if (original != null && original.contains(".")) {
+            ext = original.substring(original.lastIndexOf("."));
+        }
+        String filename = System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0,8) + ext;
+        Path filepath = uploadDir.resolve(filename);
+
+        // 실제 파일 저장
+        Files.copy(file.getInputStream(), filepath, StandardCopyOption.REPLACE_EXISTING);
+
+        String dbPath = "http://localhost:8080/uploads/" + filename; // 프론트에서 접근 가능한 경로
+        userDao.updateProfileImage(userId, dbPath);
+
+        return dbPath;
+    }
+    
+    // 기본 이미지로 변경
+    public void resetProfileImage(int userId, String path) {
+        userDao.resetProfileImage(userId, path); 
     }
 
 }

@@ -13,6 +13,7 @@ CREATE TABLE USER (
 	, nickname VARCHAR(100) NOT NULL UNIQUE
 	, userName VARCHAR(50) NOT NULL
 	, birth DATE NOT NULL
+	, profileImage VARCHAR(255) DEFAULT NULL
 );
 
 

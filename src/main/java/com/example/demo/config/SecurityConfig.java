@@ -29,6 +29,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 로그아웃 요청은 인증 없이 접근 가능하도록 설정
                 .requestMatchers("/api/**").permitAll()
+                // 업로드 폴더 인증 없이 접근 가능하도록 설정
+                .requestMatchers("/uploads/**").permitAll()
                 // 나머지 요청에 대한 보안 설정 (필요시 추가)
                 .anyRequest().authenticated()
             )
