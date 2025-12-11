@@ -107,6 +107,7 @@ CREATE TABLE notification (
 CREATE TABLE building_member (
     id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, buildingId INT UNSIGNED NOT NULL COMMENT '어떤 건물'
+	, unitId INT UNSIGNED NULL COMMENT '소속 호수'
 	, userId INT UNSIGNED NOT NULL COMMENT '참여자 owner: building.created_usr / resident: user.id'
 	, `role` VARCHAR(20) NOT NULL DEFAULT 'resident' COMMENT 'owner: 관리자 , resident: 입주자'
 	, joinedAt DATETIME NOT NULL DEFAULT NOW() COMMENT '등록일'
@@ -284,30 +285,3 @@ SELECT * FROM unit;
 SELECT * FROM building_member;
 SELECT * FROM residence;
 SELECT * FROM notification;
-
-SELECT b.id, b.`name`, b.address, b.totalFloor, b.createdUserId, b.regDate, u.nickname, COUNT(un.Id) AS unitCnt
-    FROM building AS b
-    JOIN `user` AS u
-    ON b.createdUserId = u.id
-    JOIN unit AS un
-    ON un.buildingId = b.id
-    WHERE createdUserId = 1;
-    
-     SELECT b.id
-			, b.name
-			, b.address
-			, b.totalFloor
-			, b.createdUserId
-			, bm.joinedAt AS regDate
-			, u.nickname
-			, COUNT(un.Id) AS unitCnt
-			, un.unitNumber
-			, un.floor
-		FROM building b
-		JOIN building_member bm 
-		ON bm.buildingId = b.id
-		JOIN `user` AS u
-		ON bm.userId = u.id
-		JOIN unit AS un
-		ON un.buildingId = b.id
-		WHERE bm.userId = 2 AND b.id = 1 AND bm.active = TRUE;

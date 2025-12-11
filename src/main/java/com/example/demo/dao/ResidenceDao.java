@@ -28,10 +28,12 @@ public interface ResidenceDao {
     
     // 신청 승인시 건물멤버에 등록
     @Insert("""
-    	    INSERT IGNORE INTO building_member(buildingId, userId, role, joinedAt, active)
-    	    VALUES(#{buildingId}, #{userId}, 'resident', NOW(), TRUE)
+    	    INSERT IGNORE INTO building_member(buildingId, unitId, userId, role, joinedAt, active)
+    	    VALUES(#{buildingId}, #{unitId}, #{userId}, 'resident', NOW(), TRUE)
     	""")
-    void insertBuildingMember(@Param("buildingId") int buildingId, @Param("userId") int userId);
+    void insertBuildingMember(@Param("buildingId") int buildingId,
+            @Param("userId") int userId,
+            @Param("unitId") int unitId);
     
     // 신청 승인시 unit 호수정보에 해당 멤버 등록
     @Update("""
@@ -68,7 +70,7 @@ public interface ResidenceDao {
         JOIN unit un 
         ON r.unitId = un.id
         WHERE r.buildingId=#{buildingId} AND r.status='waiting'
-        ORDER BY r.requestDate DESC
+        ORDER BY r.requestDate
     """)
     List<Residence> listApply(@Param("buildingId") int buildingId);
 

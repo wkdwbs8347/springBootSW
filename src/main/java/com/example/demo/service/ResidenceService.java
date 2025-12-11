@@ -21,7 +21,7 @@ public class ResidenceService {
     private final NotificationDao notificationDao;
 
     /**
-     * 입주 신청 처리
+     * 멤버 신청 처리
      * 1. residence 테이블에 신청 저장
      * 2. 건물 owner에게 알림 생성
      */
@@ -38,18 +38,18 @@ public class ResidenceService {
         }
     }
 
-    // 입주 승인
+    // 멤버신청 승인
     @Transactional
     public void approve(int id) {
     	residenceDao.updateStatus(id, "checked");
         Residence res = residenceDao.detail(id);
         // 건물 멤버 등록
-        residenceDao.insertBuildingMember(res.getBuildingId(), res.getUserId());
+        residenceDao.insertBuildingMember(res.getBuildingId(), res.getUserId(), res.getUnitId());
         // unit 현재 입주자 업데이트
         residenceDao.updateCurrentResident(res.getUnitId(), res.getUserId());
     }
 
-    // 입주 거절
+    // 멤버신청 거절
     @Transactional
     public void reject(int id) {
         residenceDao.deleteMoveIn(id);

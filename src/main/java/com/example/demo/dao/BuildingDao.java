@@ -45,11 +45,26 @@ public interface BuildingDao {
 
 	// resident 리스트 페이지
 	@Select("""
-			    SELECT b.id, b.name, b.address, b.totalFloor, b.createdUserId, regDate
-			    FROM building b
-			    JOIN building_member bm ON bm.buildingId = b.id
-			    WHERE bm.userId = #{userId} AND bm.active = TRUE AND bm.ROLE = 'resident'
-			""")
+			SELECT b.id AS buildingId,
+			       b.name,
+			       b.address,
+			       b.totalFloor,
+			       b.createdUserId,
+			       bm.joinedAt AS regDate,
+			       u.id AS unitId,
+			       u.floor,
+			       u.unitNumber
+			FROM building b
+			JOIN building_member bm
+			  ON bm.buildingId = b.id
+			 AND bm.active = TRUE
+			 AND bm.role = 'resident'
+			JOIN unit u
+			  ON u.buildingId = b.id
+			 AND u.currentResidentId = bm.userId
+			WHERE bm.userId = #{userId}
+			GROUP BY b.id, u.id, u.unitNumber
+						""")
 	List<Building> selectByResidentList(@Param("userId") Integer userId);
 
 	// owner 용 건물 상세 조회
@@ -60,30 +75,34 @@ public interface BuildingDao {
 				ON b.createdUserId = u.id
 				JOIN unit AS un
 				ON un.buildingId = b.id
-				WHERE b.createdUserId = #{userId} AND b.id = #{buildingId} 
+				WHERE b.createdUserId = #{userId} AND b.id = #{buildingId}
 				""")
 	Building selectByOwner(@Param("userId") int userId, @Param("buildingId") int buildingId);
 
 	// resident 용 건물 상세 조회
 	@Select("""
-			SELECT b.id
-					, b.name
-					, b.address
-					, b.totalFloor
-					, b.createdUserId
-					, bm.joinedAt AS regDate
-					, u.nickname
-					, COUNT(un.Id) AS unitCnt
-					, un.unitNumber
-					, un.floor
-				FROM building b
-				JOIN building_member bm 
-				ON bm.buildingId = b.id
-				JOIN `user` AS u
-				ON bm.userId = u.id
-				JOIN unit AS un
-				ON un.buildingId = b.id
-				WHERE bm.userId = 2 AND b.id = 1 AND bm.active = TRUE;
+			 SELECT
+			     b.id AS buildingId,
+			     b.name,
+			     b.address,
+			     b.totalFloor,
+			     b.createdUserId,
+			     bm.joinedAt AS regDate,
+			     un.id AS unitId,
+			     un.floor,
+			     un.unitNumber,
+			     u.nickname
+			 FROM building_member bm
+			 JOIN building b
+			   ON bm.buildingId = b.id
+			 JOIN unit un
+			   ON bm.unitId = un.id
+			 JOIN `user` u
+			   ON bm.userId = u.id
+			 WHERE bm.userId = #{userId}
+			   AND bm.unitId = #{unitId}
+			   AND bm.active = TRUE
+			   AND bm.role = 'resident'
 			""")
-	Building selectByResident(@Param("userId") int userId, @Param("buildingId") int buildingId);
+	Building selectByResident(@Param("userId") Integer userId, @Param("unitId") Integer unitId);
 }

@@ -22,4 +22,5 @@ public class Building {
     private int floor; // 층
     private int unitNumber; // unit.unitNumber
     private int unitCnt; // 세대 수
+    private int unitId;  // unit.id
 }

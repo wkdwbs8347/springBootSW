@@ -28,7 +28,7 @@ public class ResidenceController {
 
     private final ResidenceService residenceService;
 
-    /** 입주 신청 */
+    /** 멤버 신청 */
     @PostMapping("/move-in")
     public ResponseEntity<?> moveIn(@RequestBody MoveInRequest req) {
         residenceService.moveIn(req);

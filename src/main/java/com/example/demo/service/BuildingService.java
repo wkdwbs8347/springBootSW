@@ -41,7 +41,7 @@ public class BuildingService {
                 Unit unit = new Unit();
                 unit.setBuildingId(buildingId);
                 unit.setFloor(floor);
-                unit.setUnitNumber(floor + String.format("%02d", i));
+                unit.setUnitNumber(floor * 100 + i);
                 units.add(unit);
             }
         }
@@ -73,12 +73,14 @@ public class BuildingService {
     }
     
     
-    // owner , resident 건물 상세 조회 분기처리
-    public Building getBuildingDetail(int buildingId, int userId, boolean isOwner) {
+ // owner는 buildingId 기준, resident는 unitId 기준
+    public Building getBuildingDetail(Integer userId, Integer buildingId, Integer unitId, boolean isOwner) {
         if (isOwner) {
+            if (buildingId == null) return null; // buildingId 필수
             return buildingDao.selectByOwner(userId, buildingId);
         } else {
-            return buildingDao.selectByResident(userId, buildingId);
+            if (unitId == null) return null; // unitId 필수
+            return buildingDao.selectByResident(userId, unitId);
         }
     }
 }
