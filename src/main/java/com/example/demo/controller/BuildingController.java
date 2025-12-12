@@ -1,16 +1,18 @@
 package com.example.demo.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dto.Building;
 import com.example.demo.dto.Unit;
@@ -81,21 +83,54 @@ public class BuildingController {
 
 	// 건물 상세 조회
 	@GetMapping("/detail")
-	public ResponseEntity<?> getBuildingDetail(@RequestParam(required = false) Integer buildingId,
-			@RequestParam(required = false) Integer unitId, HttpSession session) {
+	public ResponseEntity<?> getBuildingDetail(@RequestParam Integer buildingId,
+	                                           @RequestParam(required = false) Integer unitId,
+	                                           HttpSession session) {
+		
+	    Integer userId = (Integer) session.getAttribute("userId");
+	    
+	    if (userId == null) {
+	        return ResponseEntity.status(401).body("로그인이 필요합니다");
+	    }
 
-		Integer userId = (Integer) session.getAttribute("userId");
-		Boolean isOwner = (Boolean) session.getAttribute("isOwner");
+	    // DB 기준으로 Owner 여부 확인
+	    boolean isOwner = buildingService.isOwnerOfBuilding(userId, buildingId);
+	    System.out.println(isOwner);
+	    Building building = buildingService.getBuildingDetail(userId, buildingId, unitId, isOwner);
 
-		if (userId == null)
-			return ResponseEntity.status(401).body("로그인이 필요합니다");
+	    if (building == null)
+	        return ResponseEntity.status(403).body("조회 권한이 없습니다.");
 
-		Building building = buildingService.getBuildingDetail(userId, buildingId, unitId, isOwner != null && isOwner);
+	    Map<String, Object> result = new HashMap<>();
+	    result.put("building", building);
+	    result.put("isOwner", isOwner); // 프론트에서 사용할 수 있도록 반환
 
-		if (building == null)
-			return ResponseEntity.status(403).body("조회 권한이 없습니다.");
-
-		return ResponseEntity.ok(building);
+	    return ResponseEntity.ok(result);
 	}
+	
+	   // 이미지 업로드 (신규/임시)
+    @PostMapping("/upload-image")
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String url = buildingService.uploadBuildingImage(file);
+            return ResponseEntity.ok(Map.of("buildingImage", url));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+    
+    // 기존 이미지 삭제 후 새 이미지 업로드
+    @PutMapping("/update-image")
+    public ResponseEntity<?> updateImage(@RequestParam int buildingId,
+                                         @RequestParam("file") MultipartFile file) {
+        try {
+            String newImageUrl = buildingService.updateBuildingImage(buildingId, file);
+            return ResponseEntity.ok(Map.of("buildingImage", newImageUrl));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
 
 }

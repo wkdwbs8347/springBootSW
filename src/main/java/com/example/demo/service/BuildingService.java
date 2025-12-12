@@ -1,10 +1,16 @@
 package com.example.demo.service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dao.BuildingDao;
 import com.example.demo.dto.Building;
@@ -17,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class BuildingService {
 
     private final BuildingDao buildingDao;
+    private final String UPLOAD_DIR = "uploads"; // 실제 서버 폴더 경로
 
     /**
      * 1️⃣ 건물 등록 후 2️⃣ 층별 단위 호수 자동 생성
@@ -29,7 +36,7 @@ public class BuildingService {
         if (exists > 0) {
             throw new RuntimeException("이미 등록된 건물입니다.");
         }
-
+        
         // 건물 등록
         buildingDao.insertBuilding(dto);
         int buildingId = dto.getId();
@@ -72,9 +79,18 @@ public class BuildingService {
         return buildingDao.selectByResidentList(userId);
     }
     
+    // userId가 해당 building의 등록자인지 확인
+    public boolean isOwnerOfBuilding(Integer userId, Integer buildingId) {
+        return buildingDao.isOwnerOfBuilding(buildingId, userId) > 0;
+    }
+    
     
  // owner는 buildingId 기준, resident는 unitId 기준
     public Building getBuildingDetail(Integer userId, Integer buildingId, Integer unitId, boolean isOwner) {
+    	System.out.println(buildingId);
+    	System.out.println(userId);
+    	System.out.println(unitId);
+    	System.out.println(isOwner);
         if (isOwner) {
             if (buildingId == null) return null; // buildingId 필수
             return buildingDao.selectByOwner(userId, buildingId);
@@ -83,4 +99,69 @@ public class BuildingService {
             return buildingDao.selectByResident(userId, unitId);
         }
     }
+    
+    /**
+     * 건물 이미지 업로드
+     */
+    public String uploadBuildingImage(MultipartFile file) throws Exception {
+        if (file == null || file.isEmpty()) throw new RuntimeException("파일이 비어 있습니다.");
+
+        Path uploadDir = Paths.get("uploads");
+        if (!Files.exists(uploadDir)) Files.createDirectories(uploadDir);
+
+        String original = file.getOriginalFilename();
+        String ext = "";
+        if (original != null && original.contains(".")) {
+            ext = original.substring(original.lastIndexOf("."));
+        }
+        String filename = System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0,8) + ext;
+        Path filepath = uploadDir.resolve(filename);
+
+        Files.copy(file.getInputStream(), filepath, StandardCopyOption.REPLACE_EXISTING);
+
+        return "http://localhost:8080/uploads/" + filename;
+    }
+    
+    /**
+     * 기존 이미지 삭제 후 새 이미지 업로드
+     */
+    public String updateBuildingImage(int buildingId, MultipartFile file) throws Exception {
+        if (file == null || file.isEmpty()) throw new RuntimeException("파일이 비어 있습니다.");
+
+        // 기존 이미지 URL 가져오기
+        Building building = buildingDao.selectBuildingById(buildingId);
+        String oldImageUrl = building.getProfileImage();
+
+        // 기존 이미지 파일 삭제 (기본 이미지는 삭제하지 않음)
+        if (oldImageUrl != null && !oldImageUrl.contains("defaultBuildingImg")) {
+            Path oldFilePath = Paths.get(UPLOAD_DIR, oldImageUrl.substring(oldImageUrl.lastIndexOf("/") + 1));
+            if (Files.exists(oldFilePath)) {
+                Files.delete(oldFilePath);
+            }
+        }
+
+        // 새 이미지 저장
+        if (!Files.exists(Paths.get(UPLOAD_DIR))) {
+            Files.createDirectories(Paths.get(UPLOAD_DIR));
+        }
+
+        String original = file.getOriginalFilename();
+        String ext = "";
+        if (original != null && original.contains(".")) {
+            ext = original.substring(original.lastIndexOf("."));
+        }
+
+        String filename = System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + ext;
+        Path filepath = Paths.get(UPLOAD_DIR, filename);
+        Files.copy(file.getInputStream(), filepath, StandardCopyOption.REPLACE_EXISTING);
+
+        String newImageUrl = "http://localhost:8080/uploads/" + filename;
+
+        // DB 업데이트
+        building.setProfileImage(newImageUrl);
+        buildingDao.updateBuildingImage(building);
+
+        return newImageUrl;
+    }
+    
 }

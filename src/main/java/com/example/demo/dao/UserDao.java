@@ -102,9 +102,6 @@ public interface UserDao {
 			""")
 	void updateEmail(@Param("loginId") String loginId, @Param("newEmail") String newEmail);
 
-	// Owner 여부 확인
-	@Select("SELECT COUNT(*) FROM building WHERE createdUserId = #{userId}")
-	int countOwnedBuildings(int userId);
 
 	// profileImage 업데이트
 	@Update("""
@@ -115,7 +112,7 @@ public interface UserDao {
 	void updateProfileImage(@Param("userId") int userId, @Param("profileImage") String profileImage);
 	
 	// 기본 이미지로 변경
-	@Update("UPDATE user SET profileImage = #{path} WHERE id = #{userId}")
+	@Update("UPDATE `user` SET profileImage = #{path} WHERE id = #{userId}")
 	void resetProfileImage(@Param("userId") int userId, @Param("path") String path);
 	
 	

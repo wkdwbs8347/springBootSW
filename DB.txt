@@ -17,7 +17,7 @@ CREATE TABLE USER (
 );
 
 
--- 건물 등록
+-- 건물정보
 CREATE TABLE building (
     id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT
 	, regDate DATETIME NOT NULL DEFAULT NOW() COMMENT '건물 등록일'
@@ -26,6 +26,7 @@ CREATE TABLE building (
 	, `name` VARCHAR(100) NOT NULL COMMENT '건물명'
 	, address VARCHAR(200) NOT NULL COMMENT '도로명 주소'
 	, totalFloor INT UNSIGNED NOT NULL COMMENT '건물의 총 층수'
+	, profileImage VARCHAR(255) DEFAULT '/images/defaultBuildingImg.jpg'
 
 	, CONSTRAINT unique_building UNIQUE (NAME, address)
 
@@ -85,7 +86,6 @@ CREATE TABLE residence (
 			ON DELETE CASCADE
 			ON UPDATE CASCADE
 );
-
 
 
 
@@ -274,7 +274,6 @@ CREATE TABLE monthReport (
 );
 
 
-
 ALTER TABLE building AUTO_INCREMENT = 1;
 ALTER TABLE unit AUTO_INCREMENT = 1;
 ALTER TABLE building_member AUTO_INCREMENT = 1;
@@ -285,4 +284,4 @@ SELECT * FROM building;
 SELECT * FROM unit;
 SELECT * FROM building_member;
 SELECT * FROM residence;
-SELECT * FROM notification;
+SELECT * FROM notification;			

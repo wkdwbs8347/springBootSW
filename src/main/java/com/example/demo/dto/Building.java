@@ -23,4 +23,5 @@ public class Building {
     private int unitNumber; // unit.unitNumber
     private int unitCnt; // 세대 수
     private int unitId;  // unit.id
+    private String profileImage; // 건물 이미지
 }
