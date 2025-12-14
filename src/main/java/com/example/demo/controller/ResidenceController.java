@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dto.MoveInRequest;
 import com.example.demo.dto.Notification;
@@ -73,4 +74,20 @@ public class ResidenceController {
         residenceService.markNotificationRead(id);
         return ResponseEntity.ok(Map.of("success", true));
     }
+    
+    /** 증빙 이미지 업로드 (임시 저장) */
+    @PostMapping("/upload-image")
+    public ResponseEntity<?> uploadMoveInImage(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "oldImageUrl", required = false) String oldImageUrl
+    ) {
+        try {
+            String newUrl = residenceService.uploadMoveInImage(file, oldImageUrl);
+            return ResponseEntity.ok(Map.of("url", newUrl));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
 }

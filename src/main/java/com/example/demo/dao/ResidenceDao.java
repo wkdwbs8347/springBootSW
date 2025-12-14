@@ -17,14 +17,42 @@ public interface ResidenceDao {
 
     // 입주 신청 insert
     @Insert("""
-        INSERT INTO residence(buildingId, unitId, userId, floor, status, requestDate)
-        VALUES(#{buildingId}, #{unitId}, #{userId}, #{floor}, 'waiting', NOW())
+        INSERT INTO residence(buildingId, unitId, userId, floor, status, requestDate, proofImage)
+        VALUES(#{buildingId}, #{unitId}, #{userId}, #{floor}, 'waiting', NOW(), #{proofImage})
     """)
     void insertMoveIn(MoveInRequest req);
 
     // 신청 상태 업데이트 (승인)
     @Update("UPDATE residence SET status=#{status} WHERE id=#{id}")
     void updateStatus(@Param("id") int id, @Param("status") String status);
+    
+    // 신청 유저가 일반 사용자인지 owner가 본인 건물에 등록하려는건지 체크용 role체크
+    @Select("""
+    	    SELECT DISTINCT `role`
+    	    FROM building_member
+    	    WHERE buildingId = #{buildingId}
+    	      AND userId = #{userId}
+    	      AND active = TRUE
+    	""")
+    	String findMemberRole(
+    	    @Param("buildingId") int buildingId,
+    	    @Param("userId") int userId
+    	);
+    
+    // owner이면 insert가 아니라 기존 row에 unitId 업데이트
+    @Update("""
+    	    UPDATE building_member
+    	    SET unitId = #{unitId}
+    	    WHERE buildingId = #{buildingId}
+    	      AND userId = #{userId}
+    	      AND role = 'owner'
+    	      AND active = TRUE
+    	""")
+    	int updateOwnerUnit(
+    	    @Param("buildingId") int buildingId,
+    	    @Param("userId") int userId,
+    	    @Param("unitId") int unitId
+    	);
     
     // 신청 승인시 건물멤버에 등록
     @Insert("""
@@ -49,21 +77,36 @@ public interface ResidenceDao {
 
     // 신청 상세 정보 조회
     @Select("""
-    	    SELECT r.id, r.userId, r.buildingId, r.floor, r.requestDate, r.status, r.unitId, 
-    			    u.nickname, un.unitNumber
+    	    SELECT r.id
+    			    , r.userId
+    			    , r.buildingId
+    			    , r.floor
+    			    , r.requestDate
+    			    , r.proofImage
+    			    , r.status
+    			    , r.unitId
+    			    , u.nickname
+    			    , un.unitNumber
     	    FROM residence r
     	    JOIN user u 
     	    ON r.userId = u.id
     	    JOIN unit un 
     	    ON r.unitId = un.id
-    	    WHERE r.id=#{id}
+    	    WHERE r.id = #{id}
     	""")
     	Residence detail(@Param("id") int id);
 
     // 건물별 신청 목록 (waiting 상태만)
     @Select("""
-    	SELECT r.id, r.userId, r.buildingId, r.floor, r.requestDate, r.status, r.unitId, 
-    			u.nickname, un.unitNumber
+    	SELECT r.id
+    			, r.userId
+    			, r.buildingId
+    			, r.floor
+    			, r.requestDate
+    			, r.status
+    			, r.unitId
+    			, u.nickname
+    			, un.unitNumber
         FROM residence r
         JOIN user u 
         ON r.userId = u.id

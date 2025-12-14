@@ -2,31 +2,27 @@ package com.example.demo.dao;
 
 import java.util.List;
 
-import com.example.demo.dto.Notification;
+import org.apache.ibatis.annotations.*;
 
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import com.example.demo.dto.Notification;
 
 @Mapper
 public interface NotificationDao {
 
-    // 알림 추가 (입주 신청 발생 시 owner에게 발송)
-    @Insert("""
-        INSERT INTO notification(userId, message, link, isRead, regDate)
-        VALUES(#{userId}, #{message}, #{link}, 0, NOW())
-    """)
-    void insertNotification(@Param("userId") int userId,
-                            @Param("message") String message,
-                            @Param("link") String link);
+    // 알림 추가 (id 자동 생성 후 객체에 할당)
+    @Insert("INSERT INTO notification(userId, message, link) VALUES(#{userId}, #{message}, #{link})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")  // id를 자동으로 채워줌
+    void insertNotification(Notification notification);
 
-    // 미확인 알림 리스트 조회
-    @Select("SELECT * FROM notification WHERE userId=#{userId} AND isRead=0 ORDER BY regDate DESC")
-    List<Notification> listUnread(@Param("userId") int userId);
+    // 미확인 알림만 조회
+    @Select("SELECT * FROM notification WHERE userId = #{userId} AND isRead = 0 ORDER BY regDate DESC")
+    List<Notification> listUnread(@Param("userId") Integer userId);
 
     // 알림 읽음 처리
-    @Update("UPDATE notification SET isRead=1 WHERE id=#{id}")
-    void markAsRead(@Param("id") int id);
+    @Update("UPDATE notification SET isRead = 1 WHERE id = #{id} AND isRead = 0")
+    void markAsRead(@Param("id") Integer id);
+
+    // 모든 알림 읽음 처리
+    @Update("UPDATE notification SET isRead = 1 WHERE userId = #{userId} AND isRead = 0")
+    void markAllNotificationsAsRead(@Param("userId") Integer userId);
 }

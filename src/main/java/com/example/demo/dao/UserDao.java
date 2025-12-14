@@ -102,7 +102,6 @@ public interface UserDao {
 			""")
 	void updateEmail(@Param("loginId") String loginId, @Param("newEmail") String newEmail);
 
-
 	// profileImage 업데이트
 	@Update("""
 			UPDATE `user`
@@ -110,11 +109,12 @@ public interface UserDao {
 				WHERE id = #{userId}
 			""")
 	void updateProfileImage(@Param("userId") int userId, @Param("profileImage") String profileImage);
-	
+
 	// 기본 이미지로 변경
 	@Update("UPDATE `user` SET profileImage = #{path} WHERE id = #{userId}")
 	void resetProfileImage(@Param("userId") int userId, @Param("path") String path);
-	
-	
-	
+
+	@Select("SELECT nickname FROM user WHERE id = #{id}")
+	String getNicknameById(@Param("id") int id);
+
 }

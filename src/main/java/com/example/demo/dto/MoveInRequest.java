@@ -13,4 +13,5 @@ public class MoveInRequest {
     private int buildingId;   // 신청 건물 ID
     private int unitId;       // 신청 호수 ID
     private int floor;        // 신청 층수
+    private String proofImage; // 증빙 서류 이미지
 }

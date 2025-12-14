@@ -92,7 +92,7 @@ public class UserController {
 			// 현재 로그인 되어있는 유저 객체
 			User users = this.userService.getLoginUser(loginUser);
 	        // Owner 여부 확인 후 세션에 저장
-	        session.setAttribute("userId", users.getId());
+			session.setAttribute("userId", users.getId());
 			result.put("loginUser", users);
 		}
 		return result;

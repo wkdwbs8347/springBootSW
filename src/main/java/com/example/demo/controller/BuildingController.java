@@ -95,7 +95,6 @@ public class BuildingController {
 
 	    // DB 기준으로 Owner 여부 확인
 	    boolean isOwner = buildingService.isOwnerOfBuilding(userId, buildingId);
-	    System.out.println(isOwner);
 	    Building building = buildingService.getBuildingDetail(userId, buildingId, unitId, isOwner);
 
 	    if (building == null)

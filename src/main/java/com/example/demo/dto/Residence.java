@@ -20,4 +20,5 @@ public class Residence {
     private String unitNumber;    // 호수 번호
     private String status;        // 상태(waiting/checked)
     private LocalDateTime requestDate; // 신청일
+    private String proofImage; // 증빙 서류 이미지
 }

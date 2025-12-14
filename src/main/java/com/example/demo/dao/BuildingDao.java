@@ -57,7 +57,7 @@ public interface BuildingDao {
 			ON b.id = bm.buildingId
 			JOIN unit AS un
 			ON bm.unitId = un.id
-			WHERE bm.userId = #{userId} AND `role` = 'resident';
+			WHERE bm.userId = #{userId};
 								""")
 	List<Building> selectByResidentList(@Param("userId") Integer userId);
 
@@ -107,7 +107,6 @@ public interface BuildingDao {
 			 WHERE bm.userId = #{userId}
 			   AND bm.unitId = #{unitId}
 			   AND bm.active = TRUE
-			   AND bm.role = 'resident'
 			""")
 	Building selectByResident(@Param("userId") Integer userId, @Param("unitId") Integer unitId);
 

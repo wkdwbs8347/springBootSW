@@ -26,7 +26,7 @@ public class BuildingService {
     private final String UPLOAD_DIR = "uploads"; // 실제 서버 폴더 경로
 
     /**
-     * 1️⃣ 건물 등록 후 2️⃣ 층별 단위 호수 자동 생성
+     * 건물 등록 후 층별 단위 호수 자동 생성
      */
     @Transactional
     public void registerBuilding(Building dto) {
@@ -87,17 +87,17 @@ public class BuildingService {
     
  // owner는 buildingId 기준, resident는 unitId 기준
     public Building getBuildingDetail(Integer userId, Integer buildingId, Integer unitId, boolean isOwner) {
-    	System.out.println(buildingId);
-    	System.out.println(userId);
-    	System.out.println(unitId);
-    	System.out.println(isOwner);
-        if (isOwner) {
-            if (buildingId == null) return null; // buildingId 필수
-            return buildingDao.selectByOwner(userId, buildingId);
-        } else {
-            if (unitId == null) return null; // unitId 필수
+    	
+        // resident 컨텍스트가 우선
+        if (unitId != null) {
             return buildingDao.selectByResident(userId, unitId);
         }
+
+        // owner 컨텍스트
+        if (isOwner && buildingId != null) {
+            return buildingDao.selectByOwner(userId, buildingId);
+        }
+        return null;
     }
     
     /**

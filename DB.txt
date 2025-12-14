@@ -72,6 +72,7 @@ CREATE TABLE residence (
 	, buildingId INT UNSIGNED NOT NULL COMMENT '어떤 건물인지'
 	, `floor` INT UNSIGNED NOT NULL COMMENT '몇층 인지'
 	, unitId INT UNSIGNED NOT NULL COMMENT '몇호 인지'
+	, proofImage VARCHAR(255) NOT NULL COMMENT '입주 신청 증빙 이미지'
 	, `status` VARCHAR(50) DEFAULT 'waiting' COMMENT '승인: checked , 대기: waiting'
 
 	, CONSTRAINT fk_residence_user FOREIGN KEY (userId)	REFERENCES `user`(id)
@@ -87,15 +88,27 @@ CREATE TABLE residence (
 			ON UPDATE CASCADE
 );
 
+-- 1:1 메시지 테이블
+CREATE TABLE message (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT
+    , senderId INT UNSIGNED NOT NULL COMMENT '보내는 사람'
+    , receiverId INT UNSIGNED NOT NULL COMMENT '받는 사람'
+    , title VARCHAR(100) NOT NULL
+    , content TEXT NOT NULL
+    , sentDate DATETIME NOT NULL DEFAULT NOW()
+    , isRead TINYINT NOT NULL DEFAULT 0 COMMENT '읽음 여부'
+    , CONSTRAINT fk_message_sender FOREIGN KEY (senderId) REFERENCES `user`(id) ON DELETE CASCADE
+    , CONSTRAINT fk_message_receiver FOREIGN KEY (receiverId) REFERENCES `user`(id) ON DELETE CASCADE
+);
 
 
 -- 알림 테이블
 CREATE TABLE notification (
     id INT PRIMARY KEY AUTO_INCREMENT
-	, userId INT UNSIGNED NOT NULL-- 알림 받는 owner
+	, userId INT UNSIGNED NOT NULL COMMENT '알림 받는 사람'
 	, message VARCHAR(255) NOT NULL
-	, link VARCHAR(255) NOT NULL
-	, isRead TINYINT NOT NULL DEFAULT 0 
+	, link VARCHAR(255) NOT NULL COMMENT '알림 눌렀을때 이동할 페이지'
+	, isRead TINYINT NOT NULL DEFAULT 0 COMMENT '읽음 여부'
 	, regDate DATETIME NOT NULL DEFAULT NOW()
 
 	, CONSTRAINT fk_notification_user FOREIGN KEY (userId) REFERENCES `user`(id)
@@ -285,3 +298,20 @@ SELECT * FROM unit;
 SELECT * FROM building_member;
 SELECT * FROM residence;
 SELECT * FROM notification;			
+select * from message;
+
+SELECT 
+    m.id, 
+    m.senderId, 
+    m.receiverId, 
+    m.title, 
+    m.content, 
+    m.sentDate, 
+    m.isRead, 
+    u.nickname AS senderName, 
+    un.floor, 
+    un.unitNumber
+FROM message m
+JOIN user u ON m.senderId = u.id -- 메시지 보낸 사람 정보
+JOIN unit un ON un.currentResidentId = m.senderId -- 보낸 사람의 unit 정보 (user 테이블과 연결된 unit)
+WHERE m.id = 2; -- 메시지 ID로 조회
