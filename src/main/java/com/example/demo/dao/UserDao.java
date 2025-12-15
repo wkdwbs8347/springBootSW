@@ -113,8 +113,14 @@ public interface UserDao {
 	// 기본 이미지로 변경
 	@Update("UPDATE `user` SET profileImage = #{path} WHERE id = #{userId}")
 	void resetProfileImage(@Param("userId") int userId, @Param("path") String path);
+	
+	// 채팅방에서 활용할 닉네임 가져오기
+    @Select("SELECT nickname FROM user WHERE id = #{userId}")
+    String getNicknameById(Long userId);
+    
+    // 채팅방에서 활용할 프로필 이미지 가져오기
+    @Select("SELECT profileImage FROM user WHERE id = #{userId}")
+    String getProfileImageById(Long userId);
 
-	@Select("SELECT nickname FROM user WHERE id = #{id}")
-	String getNicknameById(@Param("id") int id);
 
 }

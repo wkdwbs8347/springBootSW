@@ -5,8 +5,10 @@ import java.util.List;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import com.example.demo.dto.Message;
 
@@ -18,6 +20,7 @@ public interface MessageDao {
 			INSERT INTO message (senderId, receiverId, title, content)
 			    VALUES (#{senderId}, #{receiverId}, #{title}, #{content})
 			""")
+	@Options(useGeneratedKeys = true, keyProperty = "id") // DTO(Message)의 id 필드에 DB에서 생성된 키 값을 채워 넣으라는 의미
 	void insertMessage(Message message);
 	
 	// 메세지 리스트
@@ -46,4 +49,20 @@ public interface MessageDao {
             DELETE FROM message WHERE id = #{id}
             """)
     void deleteMessage(@Param("id") Long id);
+    
+ // 여러 메시지 삭제
+    @Delete("""
+    	<script>
+    	    DELETE FROM message
+    		    WHERE id IN
+    		    <foreach item="id" collection="ids" open="(" separator="," close=")">
+    		        #{id}
+    		    </foreach>
+        </script>
+    """)
+    void deleteMessages(@Param("ids") List<Long> ids);
+    
+    // 메세지 읽음 처리
+    @Update("UPDATE message SET isRead = 1 WHERE id = #{id} AND isRead = 0")
+    void updateIsRead(@Param("id") Long id);
 }

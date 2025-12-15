@@ -29,21 +29,19 @@ public class MessageService {
     public void sendMessage(Message message) {
         // 보낸 사람과 받는 사람이 같으면 예외를 발생시킨다
         if (message.getSenderId() == message.getReceiverId()) {
-            throw new IllegalArgumentException("본인이 본인에게 메시지를 보낼 수 없습니다.");
+            throw new IllegalArgumentException("본인에게 메시지를 보낼 수 없습니다.");
         }
-        
-        // 메시지 보내는 사람의 닉네임을 조회하여 실시간 메시지에 포함
-        String senderName = userDao.getNicknameById(message.getSenderId());
-        message.setSenderName(senderName);
-        
-        // 실시간 메시지 전송
-        messagingTemplate.convertAndSend(
-        		"/topic/messages/" + message.getReceiverId(), 
-        		message
-        		);
         
         // 메시지 DB 저장
         messageDao.insertMessage(message);
+        
+        Message savedMessage = messageDao.getMessageById(message.getId());
+        
+        // 실시간 메시지 전송
+        messagingTemplate.convertAndSend(
+        		"/topic/messages/" + savedMessage.getReceiverId(), 
+        		savedMessage
+        		);
         
 
         // 알림 생성
@@ -75,4 +73,25 @@ public class MessageService {
     public void deleteMessage(Long id) {
         messageDao.deleteMessage(id);
     }
+    
+ // 여러 메시지 삭제 (수신자 체크)
+    public void deleteMessages(List<Long> messageIds, Integer userId) {
+        // 수신자가 본인인 메시지만 삭제
+        List<Long> deletableIds = messageIds.stream()
+            .filter(id -> {
+                Message m = getMessageById(id);
+                return m != null && m.getReceiverId() == userId;
+            })
+            .toList();
+        
+        if (!deletableIds.isEmpty()) {
+            messageDao.deleteMessages(deletableIds);
+        }
+    }
+    
+    // 메세지 읽음 처리
+    public void markAsRead(Long id) {
+        messageDao.updateIsRead(id);
+    }
+    
 }
