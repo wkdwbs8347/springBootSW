@@ -47,4 +47,24 @@ public interface BuildingMemberDao {
 			      	AND bm.active = TRUE
 			""")
 	BuildingMember selectMemberByUserIdAndUnitId(@Param("id") int id, @Param("userId") int userId, @Param("unitId") int unitId);
+	
+	// Owner 전용 멤버 상세 조회
+	@Select("""
+	    SELECT
+	        bm.userId AS userId,
+	        u.nickname AS nickname,
+	        bm.role AS role,
+	        COALESCE(u_unit.unitNumber, 0) AS unitNumber,
+	        COALESCE(u_unit.floor, 0) AS floor,
+	        u.profileImage AS profileImage,
+	        bm.joinedAt AS joinedAt
+	    FROM building_member bm
+	    JOIN `user` u ON bm.userId = u.id
+	    LEFT JOIN unit u_unit ON bm.unitId = u_unit.id
+	    WHERE bm.userId = #{userId}
+	      AND bm.buildingId = #{id}
+	      AND bm.unitId IS NULL
+	      AND bm.active = TRUE
+	""")
+	BuildingMember selectOwnerByUserId(@Param("id") int id, @Param("userId") int userId);
 }

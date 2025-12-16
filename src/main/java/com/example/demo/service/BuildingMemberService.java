@@ -24,4 +24,9 @@ public class BuildingMemberService {
         return buildingMemberDao.selectMemberByUserIdAndUnitId(id, userId, unitId);
     }
     
+    // Owner 전용 조회
+    public BuildingMember getOwnerByUserId(int buildingId, int userId) {
+        return buildingMemberDao.selectOwnerByUserId(buildingId, userId);
+    }
+    
 }

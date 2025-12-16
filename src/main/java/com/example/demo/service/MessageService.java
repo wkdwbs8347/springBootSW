@@ -1,14 +1,11 @@
 package com.example.demo.service;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dao.MessageDao;
-import com.example.demo.dao.UserDao;
 import com.example.demo.dto.Message;
 import com.example.demo.dto.Notification;
 
@@ -21,7 +18,6 @@ public class MessageService {
     private final MessageDao messageDao;
     private final NotificationService notificationService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final UserDao userDao;  
 
     /**
      * 메시지 전송 (DB + 실시간 + 알림)

@@ -29,9 +29,18 @@ public class BuildingMemberController {
     public BuildingMember getMemberDetail(
     		@RequestParam int id,
             @RequestParam int userId,
-            @RequestParam int unitId
+            @RequestParam(required=false) Integer unitId
             ) {
         return buildingMemberService.getMemberByUserIdAndUnitId(id, userId, unitId);
+    }
+    
+    // Owner 전용 상세 조회
+    @GetMapping("/ownerDetail")
+    public BuildingMember getOwnerDetail(
+            @RequestParam int id,       // buildingId
+            @RequestParam int userId
+    ) {
+        return buildingMemberService.getOwnerByUserId(id, userId);
     }
 
 }
