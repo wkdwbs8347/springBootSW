@@ -33,7 +33,6 @@ public class MessageController {
     ) {
     	
         Integer senderId = (Integer) session.getAttribute("userId");
-        System.out.println(senderId);
         
         // 본인이 본인에게 메시지를 보내는 경우를 차단
         if (senderId.equals(message.getReceiverId())) {
