@@ -289,4 +289,17 @@ public class UserController {
 
         return ResponseEntity.ok(Map.of("profileImage", defaultImg));
     }
+    
+ // 로그인한 유저 정보 반환
+    @GetMapping("/me")
+    public ResponseEntity<?> getLoginUser(HttpSession session) {
+        String loginId = (String) session.getAttribute("userLoginId");
+        if (loginId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다"));
+        }
+        User user = userService.getLoginUser(loginId);
+        return ResponseEntity.ok(user);
+    }
+    
+    
 }

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.demo.dao.BuildingChatRoomDao;
 import com.example.demo.dao.BuildingDao;
 import com.example.demo.dto.Building;
 import com.example.demo.dto.Unit;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class BuildingService {
 
     private final BuildingDao buildingDao;
+    private final BuildingChatRoomService buildingChatRoomService;
     private final String UPLOAD_DIR = "uploads"; // 실제 서버 폴더 경로
 
     /**
@@ -53,6 +55,8 @@ public class BuildingService {
             }
         }
         buildingDao.insertUnits(units);
+        // ✅ 채팅방 생성
+        buildingChatRoomService.createRoom(buildingId);
     }
     
     /**

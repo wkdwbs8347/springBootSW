@@ -19,7 +19,7 @@ public interface BuildingDao {
 	@Insert("INSERT INTO building (createdUserId, name, address, totalFloor, profileImage) "
 			+ "VALUES (#{createdUserId}, #{name}, #{address}, #{totalFloor}, #{profileImage})")
 	@Options(useGeneratedKeys = true, keyProperty = "id")
-	void insertBuilding(Building paylode);
+	void insertBuilding(Building payload);
 
 	// 단위 호수 batch insert
 	@Insert({ "<script>", "INSERT INTO unit (buildingId, `floor`, unitNumber) VALUES ",

@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dto.Building;
 import com.example.demo.dto.Unit;
+import com.example.demo.service.BuildingChatRoomService;
 import com.example.demo.service.BuildingService;
 
 import jakarta.servlet.http.HttpSession;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class BuildingController {
 
 	private final BuildingService buildingService;
+	private final BuildingChatRoomService buildingChatRoomService;
 
 	/**
 	 * 프론트에서 POST 요청으로 건물 등록 예: { createdUsr: 1, name: "빌딩A", address: "서울",
@@ -95,7 +97,9 @@ public class BuildingController {
 
 	    // DB 기준으로 Owner 여부 확인
 	    boolean isOwner = buildingService.isOwnerOfBuilding(userId, buildingId);
+	    
 	    Building building = buildingService.getBuildingDetail(userId, buildingId, unitId, isOwner);
+	    Long roomId = buildingChatRoomService.getRoomIdByBuildingId(buildingId); // 채팅방 id 가져오기
 
 	    if (building == null)
 	        return ResponseEntity.status(403).body("조회 권한이 없습니다.");
@@ -103,6 +107,7 @@ public class BuildingController {
 	    Map<String, Object> result = new HashMap<>();
 	    result.put("building", building);
 	    result.put("isOwner", isOwner); // 프론트에서 사용할 수 있도록 반환
+	    result.put("roomId", roomId);
 
 	    return ResponseEntity.ok(result);
 	}

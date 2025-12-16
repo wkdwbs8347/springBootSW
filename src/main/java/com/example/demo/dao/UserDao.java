@@ -21,9 +21,9 @@ public interface UserDao {
 	// 회원가입 저장
 	@Insert("""
 			INSERT INTO `user`
-			(loginId, loginPw, nickname, email, userName, birth)
+			(loginId, loginPw, nickname, email, userName, birth, profileImage)
 			VALUES
-			(#{loginId}, #{loginPw}, #{nickname}, #{email}, #{userName}, #{birth})
+			(#{loginId}, #{loginPw}, #{nickname}, #{email}, #{userName}, #{birth}, #{profileImage})
 			""")
 	void insertUser(User user);
 

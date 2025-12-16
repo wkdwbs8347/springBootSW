@@ -298,20 +298,6 @@ SELECT * FROM unit;
 SELECT * FROM building_member;
 SELECT * FROM residence;
 SELECT * FROM notification;			
-select * from message;
-
-SELECT 
-    m.id, 
-    m.senderId, 
-    m.receiverId, 
-    m.title, 
-    m.content, 
-    m.sentDate, 
-    m.isRead, 
-    u.nickname AS senderName, 
-    un.floor, 
-    un.unitNumber
-FROM message m
-JOIN user u ON m.senderId = u.id -- 메시지 보낸 사람 정보
-JOIN unit un ON un.currentResidentId = m.senderId -- 보낸 사람의 unit 정보 (user 테이블과 연결된 unit)
-WHERE m.id = 2; -- 메시지 ID로 조회
+SELECT * FROM message;
+SELECT * FROM buildingChatRoom;
+SELECT * FROM buildingChatMsg;      

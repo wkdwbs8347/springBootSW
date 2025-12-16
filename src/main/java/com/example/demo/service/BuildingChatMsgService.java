@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
@@ -18,8 +19,9 @@ public class BuildingChatMsgService {
     private final UserDao userDao; // nickname, profile 가져오기
 
     public BuildingChatMessage saveMessage(Long roomId, BuildingChatMessage msg) {
+    	msg.setRoomId(roomId); // roomId 설정
         // DB 저장
-        chatMsgDao.insertMessage(roomId, msg.getUserId(), msg.getContent());
+        chatMsgDao.insertMessage(msg);
 
         // nickname 가져오기
         String nickname = userDao.getNicknameById(msg.getUserId());
@@ -32,4 +34,18 @@ public class BuildingChatMsgService {
 
         return msg; // 브로드캐스트용 DTO
     }
+    
+    public void deleteMessage(Long messageId) {
+        chatMsgDao.deleteMessage(messageId);
+    }
+
+    public BuildingChatMessage updateMessage(Long messageId, String content) {
+        chatMsgDao.updateMessageContent(messageId, content);
+        return chatMsgDao.getMessageById(messageId);
+    }
+    
+    public List<BuildingChatMessage> getMessagesByRoomId(Long roomId) {
+        return chatMsgDao.getMessagesByRoomId(roomId);
+    }
+    
 }
