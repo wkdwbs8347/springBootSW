@@ -33,7 +33,7 @@ public interface BuildingChatMsgDao {
 				FROM buildingChatMsg AS bcm
 				JOIN `user` AS u
 				ON u.id = bcm.userId
-				WHERE roomId = 1 ORDER BY sentDate ASC;
+				WHERE roomId = #{roomId} ORDER BY sentDate ASC;
 			   		""")
 	List<BuildingChatMessage> getMessagesByRoomId(Long roomId);
 

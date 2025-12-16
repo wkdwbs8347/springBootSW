@@ -27,7 +27,7 @@ public class MessageController {
     private final MessageService messageService;
 
     @PostMapping("/send")
-    public ResponseEntity<Void> sendMessage(
+    public ResponseEntity<String> sendMessage(
             @RequestBody Message message,
             HttpSession session
     ) {
@@ -36,7 +36,7 @@ public class MessageController {
         
         // 본인이 본인에게 메시지를 보내는 경우를 차단
         if (senderId.equals(message.getReceiverId())) {
-            return ResponseEntity.badRequest().build();  // 또는 Error 메시지 반환
+            return ResponseEntity.badRequest().body("본인에게 메시지를 보낼 수 없습니다.");  // 또는 Error 메시지 반환
         }
         message.setSenderId(senderId);
 

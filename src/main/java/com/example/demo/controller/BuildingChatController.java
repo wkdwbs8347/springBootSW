@@ -32,12 +32,12 @@ public class BuildingChatController {
 		template.convertAndSend("/topic/building/" + roomId, savedMsg);
 	}
 
-	@DeleteMapping("/building/chat/{messageId}")
+	@DeleteMapping("/building/chat/delete/{messageId}")
 	public void deleteMessage(@PathVariable Long messageId) {
 		chatMsgService.deleteMessage(messageId);
 	}
 
-	@PutMapping("/building/chat/{messageId}")
+	@PutMapping("/building/chat/update/{messageId}")
 	public BuildingChatMessage updateMessage(@PathVariable Long messageId, @RequestBody String content) {
 		return chatMsgService.updateMessage(messageId, content);
 	}

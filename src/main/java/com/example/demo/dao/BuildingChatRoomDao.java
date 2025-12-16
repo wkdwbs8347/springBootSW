@@ -16,6 +16,7 @@ public interface BuildingChatRoomDao {
     @Options(useGeneratedKeys = true, keyProperty = "id")
 	void insertRoom(BuildingChatRoom  room);
     
+    // 건물별 채팅방 id(번호)조회
     @Select("SELECT id FROM buildingChatRoom WHERE buildingId = #{buildingId}")
     Long findRoomIdByBuildingId(@Param("buildingId") int buildingId);
 }
